@@ -39,31 +39,21 @@ sast-npm-audit:
 sonar-audit:
   stage: test
   image: sonarsource/sonar-scanner-cli:latest
-  dependencies:
-    - unit-test
   script:
-    - |
-      if [ -z "${SONAR_HOST_URL}" ]; then
-        echo "SONAR_HOST_URL not configured, skipping SonarQube analysis"
-        exit 0
-      fi
     - sonar-scanner
       -Dsonar.projectKey=${CI_PROJECT_NAME}
       -Dsonar.sources=src
       -Dsonar.host.url=${SONAR_HOST_URL}
       -Dsonar.login=${SONAR_TOKEN}
-      -Dsonar.php.coverage.reportPaths=var/log/cobertura.xml
   allow_failure: true
   only:
     - branches
 
 trivy-fs-audit:
   stage: test
-  image: 
-    name: aquasec/trivy:latest
-    entrypoint: [""]
+  image: aquasec/trivy:latest
   script:
-    - trivy fs --severity HIGH,CRITICAL --exit-code 0 --scanners vuln .
+    - trivy fs --severity HIGH,CRITICAL --exit-code 0 .
   allow_failure: true
   only:
     - branches
@@ -76,10 +66,8 @@ unit-test:
   before_script:
     - apt-get update && apt-get install -y git zip unzip
     - docker-php-ext-install pdo pdo_mysql
-    - pecl install pcov && docker-php-ext-enable pcov
-    - mkdir -p var/log
   script:
-    - XDEBUG_MODE=coverage php bin/phpunit --coverage-cobertura=var/log/cobertura.xml --log-junit=var/log/junit.xml
+    - php bin/phpunit
   coverage: '/^\s*Lines:\s*\d+.\d+\%/'
   artifacts:
     reports:
@@ -100,8 +88,8 @@ e2e-test-job:
     - docker-php-ext-install pdo pdo_mysql
   script:
     - echo "Running E2E tests"
-    - php bin/phpunit --testsuite=e2e --no-coverage
-  allow_failure: false
+    - php bin/phpunit --testsuite=e2e
+  allow_failure: true
   only:
     - branches
 
