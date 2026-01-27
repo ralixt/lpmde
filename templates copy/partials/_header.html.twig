@@ -1,0 +1,37 @@
+<header class="sticky top-0 z-50 glass-nav border-b border-white/10">
+    <div class="max-w-[1500px] mx-auto px-4 lg:px-10 h-20 flex items-center justify-between gap-8">
+        <!-- Logo Area -->
+        <div class="flex items-center gap-3 shrink-0">
+            <div class="text-primary">
+                <img src="{{ asset('img/logo.png') }}" class="logo-site" alt="">
+            </div>
+            <h1 class="text-xl font-bold tracking-tight uppercase hidden md:block text-white">La Petite Maison de l'épouvante</h1>
+        </div>
+        <!-- Main Nav Links -->
+        <nav class="hidden lg:flex items-center gap-8 uppercase text-xs font-semibold tracking-widest text-slate-400">
+            <a class="hover:text-primary transition-colors" href="#">Cinema</a>
+            <a class="hover:text-primary transition-colors" href="#">Figurines</a>
+            <a class="hover:text-primary transition-colors" href="#">Games</a>
+            <a class="hover:text-primary transition-colors" href="#">Troc Zone</a>
+            <a class="hover:text-primary transition-colors" href="#">Fanzine</a>
+        </nav>
+        <!-- Search and Icons -->
+        <div class="flex items-center gap-4 flex-1 justify-end">
+            <div class="relative max-w-xs w-full hidden sm:block">
+                <span
+                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 scale-90">search</span>
+                <input
+                    class="w-full bg-white/5 border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-primary focus:border-primary"
+                    placeholder="Search the crypt..." type="text" />
+            </div>
+            <button class="p-2 hover:bg-white/5 rounded-full relative">
+                <span class="text-white material-symbols-outlined">shopping_cart</span>
+                <span
+                    class="absolute top-1 right-1 bg-primary text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">3</span>
+            </button>
+            <button class="p-2 hover:bg-white/5 rounded-full">
+                <span class="text-white material-symbols-outlined">account_circle</span>
+            </button>
+        </div>
+    </div>
+</header>

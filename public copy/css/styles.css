@@ -1,0 +1,23 @@
+:root {
+    --red: #ea2a33;
+    --black: #0a0a0a;
+    --white: #f8F6F6;
+}
+
+body {
+    background-color: var(--black);
+    color: var(--white);
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+header nav ul li {
+    letter-spacing: 0.05em;
+}
+
+.logo-site {
+    height: 55px;
+}
+
+.logo-site-footer {
+    width: 60px;
+}
