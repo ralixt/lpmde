@@ -13,7 +13,7 @@ install:
   stage: install
   image: composer:latest
   script:
-    - composer install --prefer-dist --no-ansi --no-interaction --no-progress --no-scripts --optimize-autoloader
+    - composer install --prefer-dist --no-ansi --no-interaction --no-progress --optimize-autoloader
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
