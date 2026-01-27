@@ -59,7 +59,9 @@ sonar-audit:
 
 trivy-fs-audit:
   stage: test
-  image: aquasec/trivy:latest
+  image: 
+    name: aquasec/trivy:latest
+    entrypoint: [""]
   script:
     - trivy fs --severity HIGH,CRITICAL --exit-code 0 --scanners vuln .
   allow_failure: true
