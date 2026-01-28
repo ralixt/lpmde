@@ -7,19 +7,22 @@ RUN composer install --prefer-dist --no-dev --no-scripts --no-progress --no-inte
 # Image finale
 FROM php:8.2-apache
 
-# Installation des extensions PHP nécessaires
+# Installation des extensions PHP nécessaires (ajout de PostgreSQL)
 RUN apt-get update && apt-get install -y \
     libicu-dev \
     libzip-dev \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
+    libpq-dev \
     git \
     unzip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
     pdo \
     pdo_mysql \
+    pdo_pgsql \
+    pgsql \
     intl \
     zip \
     gd \
@@ -52,6 +55,10 @@ RUN chown -R www-data:www-data /var/www/html \
 RUN mkdir -p var/cache var/log \
     && chown -R www-data:www-data var \
     && chmod -R 775 var
+
+# Variables d'environnement par défaut
+ENV APP_ENV=prod
+ENV APP_DEBUG=0
 
 EXPOSE 80
 
