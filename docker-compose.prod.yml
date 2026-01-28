@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  app:
+    # C'est ici qu'on utilise l'image construite par votre CI GitHub
+    image: ghcr.io/brok3nwings/lpmde:latest
+    container_name: lpmde_prod
+    restart: always
+    environment:
+      - APP_ENV=prod
+      - APP_SECRET=ChangezMoiPourUnVraiSecretRobuste
+      # Connexion à la base de données définie ci-dessous
+      - DATABASE_URL=postgresql://app_user:app_password@database:5432/app_db?serverVersion=16&charset=utf8
+    ports:
+      - "8080:80" # L'app sera accessible sur localhost:8080
+    depends_on:
+      - database
+
+  database:
+    image: postgres:16-alpine
+    container_name: lpmde_db_prod
+    restart: always
+    environment:
+      - POSTGRES_DB=app_db
+      - POSTGRES_USER=app_user
+      - POSTGRES_PASSWORD=app_password
+    volumes:
+      - db_data_prod:/var/lib/postgresql/data
+
+volumes:
+  db_data_prod:
