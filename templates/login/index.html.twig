@@ -1,20 +1,30 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello LoginController!{% endblock %}
+{% block title %}Connexion{% endblock %}
 
 {% block body %}
 <style>
     .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
     .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
+    .login-form { background: #f9f9f9; padding: 30px; border-radius: 10px; margin-top: 20px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: bold; }
+    .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
+    .btn-login { background: #ff0000; color: white; padding: 12px 30px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
+    .btn-login:hover { background: #b30000; }
 </style>
 
 <div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
+    <h1>Connexion</h1>
 
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code>C:/Users/hicha/Documents/lpmde/src/Controller/LoginController.php</code></li>
-        <li>Your template at <code>C:/Users/hicha/Documents/lpmde/templates/login/index.html.twig</code></li>
-    </ul>
+    <div class="login-form">
+        <form method="POST" action="{{ path('app_do_login') }}">
+            <div class="form-group">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" id="username" name="username" placeholder="Entrez votre nom" required>
+            </div>
+            <button type="submit" class="btn-login">Se connecter</button>
+        </form>
+    </div>
 </div>
 {% endblock %}

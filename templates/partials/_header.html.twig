@@ -29,9 +29,40 @@
                 <span
                     class="absolute top-1 right-1 bg-primary text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">3</span>
             </button>
-            <button class="p-2 hover:bg-white/5 rounded-full">
-                <span class="text-white material-symbols-outlined">account_circle</span>
-            </button>
+
+            <!-- User Auth Section -->
+            {% if app.session.get('is_authenticated') %}
+                <!-- User Menu (Connected) -->
+                <div class="relative group">
+                    <button class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all">
+                        <span class="text-white material-symbols-outlined">account_circle</span>
+                        <span class="text-white text-sm font-semibold hidden md:block">{{ app.session.get('user_name') }}</span>
+                    </button>
+                    <!-- Dropdown -->
+                    <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="p-3 border-b border-gray-200">
+                            <p class="text-sm font-semibold text-gray-900">{{ app.session.get('user_name') }}</p>
+                            <p class="text-xs text-gray-600">{{ app.session.get('user_email') }}</p>
+                        </div>
+                        <div class="py-2">
+                            <a href="{{ path('app_profile') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors">
+                                <span class="material-symbols-outlined text-lg">person</span>
+                                Mon Profil
+                            </a>
+                            <a href="{{ path('app_logout') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                <span class="material-symbols-outlined text-lg">logout</span>
+                                Déconnexion
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Login Button (Not Connected) -->
+                <a href="{{ path('app_login_keycloak') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all">
+                    <span class="text-white material-symbols-outlined">login</span>
+                    <span class="text-white text-sm font-semibold hidden md:block">Connexion</span>
+                </a>
+            {% endif %}
         </div>
     </div>
 </header>

@@ -3,6 +3,73 @@
 {% block title %}Accueil{% endblock %}
 
 {% block body %}
+<!-- Flash Messages for RabbitMQ Notifications -->
+{% for message in app.flashes('success') %}
+    <div class="notification-toast" style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: #10b981; color: white; padding: 20px 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); max-width: 400px; animation: slideIn 0.3s ease-out;">
+        <button class="close-notification" style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: white; font-size: 20px; cursor: pointer; opacity: 0.7; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.2s;" onmouseover="this.style.opacity='1'; this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.opacity='0.7'; this.style.background='transparent'">×</button>
+        <div style="display: flex; align-items: start; gap: 15px;">
+            <div>
+                <strong style="display: block; margin-bottom: 5px;">Notification RabbitMQ</strong>
+                {{ message }}
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+<style>
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+}
+
+.notification-toast.fade-out {
+    animation: fadeOut 0.5s ease-out forwards;
+}
+</style>
+
+<script>
+    // Auto fade out notification after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        const notifications = document.querySelectorAll('.notification-toast');
+        
+        notifications.forEach(function(notification) {
+            // Close button functionality
+            const closeBtn = notification.querySelector('.close-notification');
+            closeBtn.addEventListener('click', function() {
+                notification.classList.add('fade-out');
+                setTimeout(function() {
+                    notification.remove();
+                }, 500);
+            });
+            
+            // Auto fade out after 5 seconds
+            setTimeout(function() {
+                notification.classList.add('fade-out');
+                setTimeout(function() {
+                    notification.remove();
+                }, 500);
+            }, 5000);
+        });
+    });
+</script>
+
 <!-- Hero Section -->
 <section class="relative h-[85vh] w-full overflow-hidden">
     <div class="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-[10s] hover:scale-105"

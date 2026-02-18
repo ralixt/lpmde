@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Message\GhostAlert;
+use App\Message\UserLoginNotification;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
@@ -16,6 +18,22 @@ final class LoginController extends AbstractController
         return $this->render('login/index.html.twig', [
             'controller_name' => 'LoginController',
         ]);
+    }
+
+    #[Route('/do-login', name: 'app_do_login', methods: ['POST'])]
+    public function doLogin(Request $request, MessageBusInterface $bus): Response
+    {
+        // Récupération du nom d'utilisateur depuis le formulaire
+        $username = $request->request->get('username', 'Utilisateur Anonyme');
+
+        // Envoi du message de connexion via RabbitMQ
+        $bus->dispatch(new UserLoginNotification($username));
+
+        // Message flash pour confirmation
+        $this->addFlash('success', "Bienvenue {$username} ! Votre connexion a été envoyée à RabbitMQ pour traitement.");
+
+        // Redirection vers la page d'accueil
+        return $this->redirectToRoute('homepage');
     }
 
     #[Route('/test-rabbit', name: 'app_test_rabbit')]
