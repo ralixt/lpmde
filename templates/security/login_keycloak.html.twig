@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion Keycloak{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex items-center justify-center px-4" style="background: linear-gradient(135deg, #5e2222 0%, #0a010e 100%);">
+    <div class="max-w-md w-full">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 space-y-6">
+            <!-- Logo/Header -->
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-500 to-red-600 rounded-full mb-4">
+                    <span class="text-4xl">🔐</span>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-900">La Petite Maison de l'Épouvante</h1>
+                <p class="text-gray-600 mt-2">Connexion sécurisée avec Keycloak</p>
+            </div>
+
+            <!-- Flash messages -->
+            {% for message in app.flashes('error') %}
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                    <div class="flex items-center">
+                        <span class="text-red-500 mr-2">⚠️</span>
+                        <p class="text-red-700 text-sm">{{ message }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+
+            {% for message in app.flashes('info') %}
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                    <div class="flex items-center">
+                        <span class="text-blue-500 mr-2">ℹ️</span>
+                        <p class="text-blue-700 text-sm">{{ message }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+
+            <!-- Bouton de connexion Keycloak -->
+            <div class="space-y-4">
+                <a href="{{ path('app_login_keycloak_redirect') }}" 
+                   class="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-red-600 to-red-600 text-white font-semibold rounded-lg hover:from-red-700 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
+                    </svg>
+                    Se connecter avec Keycloak
+                </a>
+
+                <div class="text-center">
+                    <a href="{{ path('homepage') }}" class="text-sm text-gray-600 hover:text-gray-900 underline">
+                        ← Retour à l'accueil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
