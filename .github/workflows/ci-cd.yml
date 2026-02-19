@@ -38,12 +38,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-composer-
 
+<<<<<<< HEAD
       - name: Create .env file for CI
         run: |
           echo "APP_ENV=test" > .env
           echo "APP_SECRET=test_secret_for_ci_only" >> .env
           echo "DATABASE_URL=postgresql://test:test@localhost:5432/test?serverVersion=16" >> .env
 
+=======
+>>>>>>> 2a2a3044f9adead3da88b05626bcae0a87f58ad4
       - name: Install dependencies
         run: composer install --prefer-dist --no-ansi --no-interaction --no-progress --optimize-autoloader
 
@@ -120,12 +123,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+<<<<<<< HEAD
       - name: Create .env file for tests
         run: |
           echo "APP_ENV=test" > .env
           echo "APP_SECRET=test_secret_for_ci_only" >> .env
           echo "DATABASE_URL=postgresql://test:test@localhost:5432/test?serverVersion=16" >> .env
 
+=======
+>>>>>>> 2a2a3044f9adead3da88b05626bcae0a87f58ad4
       - name: Download vendor artifact
         uses: actions/download-artifact@v4
         with:
@@ -162,12 +168,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+<<<<<<< HEAD
       - name: Create .env file for tests
         run: |
           echo "APP_ENV=test" > .env
           echo "APP_SECRET=test_secret_for_ci_only" >> .env
           echo "DATABASE_URL=postgresql://test:test@localhost:5432/test?serverVersion=16" >> .env
 
+=======
+>>>>>>> 2a2a3044f9adead3da88b05626bcae0a87f58ad4
       - name: Download vendor artifact
         uses: actions/download-artifact@v4
         with:
@@ -232,10 +241,17 @@ jobs:
   deploy-staging:
     runs-on: ubuntu-latest
     needs: build-image
+<<<<<<< HEAD
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment:
       name: staging
       url: https://localhost
+=======
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: https://staging.example.com
+>>>>>>> 2a2a3044f9adead3da88b05626bcae0a87f58ad4
     steps:
       - name: Deploy to staging
         uses: appleboy/ssh-action@v1.0.0
@@ -253,6 +269,7 @@ jobs:
   deploy-production:
     runs-on: ubuntu-latest
     needs: build-image
+<<<<<<< HEAD
     if: false  # Désactivé pour cluster local - déployer manuellement
     environment:
       name: production
@@ -302,3 +319,21 @@ jobs:
       - name: Show deployment status
         run: |
           kubectl get all -n lpmde-production
+=======
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    environment:
+      name: production
+      url: https://production.example.com
+    steps:
+      - name: Deploy to production
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PRODUCTION_SERVER }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.PRODUCTION_PATH }}
+            docker pull ghcr.io/${{ github.repository }}:latest
+            docker-compose down
+            docker-compose up -d
+>>>>>>> 2a2a3044f9adead3da88b05626bcae0a87f58ad4

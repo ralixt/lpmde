@@ -38,8 +38,11 @@ templates copy/
 composer copy.json
 README copy.md
 ###< Backup folders ###
+<<<<<<< HEAD
 
 ###> symfony/asset-mapper ###
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+=======
+>>>>>>> 2a2a3044f9adead3da88b05626bcae0a87f58ad4

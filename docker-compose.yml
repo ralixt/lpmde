@@ -25,12 +25,17 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-lpmde}
+<<<<<<< HEAD
       MYSQL_USER: ${MYSQL_USER:-postgres}
+=======
+      MYSQL_USER: ${MYSQL_USER:-lpmde}
+>>>>>>> 2a2a3044f9adead3da88b05626bcae0a87f58ad4
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-lpmde}
     volumes:
       - db-data:/var/lib/mysql
     networks:
       - lpmde-network
+<<<<<<< HEAD
     # en prod, évite d'exposer :
     # ports:
     #   - "${DB_PORT:-3306}:3306"
@@ -48,6 +53,10 @@ services:
       # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
       # - ./docker/db/data:/var/lib/postgresql/data:rw
 ###< doctrine/doctrine-bundle ###
+=======
+    ports:
+      - "${DB_PORT:-3306}:3306"
+>>>>>>> 2a2a3044f9adead3da88b05626bcae0a87f58ad4
 
 networks:
   lpmde-network:
@@ -55,6 +64,9 @@ networks:
 
 volumes:
   db-data:
+<<<<<<< HEAD
 ###> doctrine/doctrine-bundle ###
   database_data:
 ###< doctrine/doctrine-bundle ###
+=======
+>>>>>>> 2a2a3044f9adead3da88b05626bcae0a87f58ad4

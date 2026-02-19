@@ -174,4 +174,8 @@ deploy-production-job:
   only:
     - main
     - master
+<<<<<<< HEAD
   when: manual
+=======
+  when: manual
+>>>>>>> 2a2a3044f9adead3da88b05626bcae0a87f58ad4
