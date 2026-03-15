@@ -38,15 +38,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-composer-
 
-<<<<<<< HEAD
       - name: Create .env file for CI
         run: |
           echo "APP_ENV=test" > .env
           echo "APP_SECRET=test_secret_for_ci_only" >> .env
           echo "DATABASE_URL=postgresql://test:test@localhost:5432/test?serverVersion=16" >> .env
-
-=======
->>>>>>> 2a2a3044f9adead3da88b05626bcae0a87f58ad4
       - name: Install dependencies
         run: composer install --prefer-dist --no-ansi --no-interaction --no-progress --optimize-autoloader
 
@@ -123,15 +119,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-<<<<<<< HEAD
       - name: Create .env file for tests
         run: |
           echo "APP_ENV=test" > .env
           echo "APP_SECRET=test_secret_for_ci_only" >> .env
           echo "DATABASE_URL=postgresql://test:test@localhost:5432/test?serverVersion=16" >> .env
-
-=======
->>>>>>> 2a2a3044f9adead3da88b05626bcae0a87f58ad4
       - name: Download vendor artifact
         uses: actions/download-artifact@v4
         with:
@@ -168,15 +160,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-<<<<<<< HEAD
       - name: Create .env file for tests
         run: |
           echo "APP_ENV=test" > .env
           echo "APP_SECRET=test_secret_for_ci_only" >> .env
           echo "DATABASE_URL=postgresql://test:test@localhost:5432/test?serverVersion=16" >> .env
-
-=======
->>>>>>> 2a2a3044f9adead3da88b05626bcae0a87f58ad4
       - name: Download vendor artifact
         uses: actions/download-artifact@v4
         with:
@@ -241,17 +229,10 @@ jobs:
   deploy-staging:
     runs-on: ubuntu-latest
     needs: build-image
-<<<<<<< HEAD
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    environment:
-      name: staging
-      url: https://localhost
-=======
     if: github.ref == 'refs/heads/develop'
     environment:
       name: staging
       url: https://staging.example.com
->>>>>>> 2a2a3044f9adead3da88b05626bcae0a87f58ad4
     steps:
       - name: Deploy to staging
         uses: appleboy/ssh-action@v1.0.0
@@ -269,57 +250,6 @@ jobs:
   deploy-production:
     runs-on: ubuntu-latest
     needs: build-image
-<<<<<<< HEAD
-    if: false  # Désactivé pour cluster local - déployer manuellement
-    environment:
-      name: production
-      url: https://lpmde.abrokenwebsite.com
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'latest'
-
-      - name: Configure kubectl
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-
-      - name: Create namespace if not exists
-        run: |
-          kubectl create namespace lpmde-production --dry-run=client -o yaml | kubectl apply -f -
-
-      - name: Deploy PostgreSQL
-        run: |
-          kubectl apply -f k8s/postgres-pvc.yaml
-          kubectl apply -f k8s/postgres-deployment.yaml
-          kubectl apply -f k8s/postgres-service.yaml
-          echo "Waiting for PostgreSQL to be ready..."
-          kubectl wait --for=condition=ready pod -l app=postgres -n lpmde-production --timeout=180s || true
-
-      - name: Deploy application
-        run: |
-          kubectl apply -f k8s/deployment.yaml
-          kubectl apply -f k8s/service.yaml
-          kubectl apply -f k8s/ingress.yaml
-          kubectl set image deployment/lpmde-app lpmde-app=ghcr.io/${{ github.repository }}:latest -n lpmde-production
-          kubectl rollout status deployment/lpmde-app -n lpmde-production --timeout=300s
-          
-      - name: Run database migrations
-        run: |
-          kubectl delete job lpmde-migrations -n lpmde-production --ignore-not-found=true
-          kubectl apply -f k8s/migration-job.yaml
-          kubectl wait --for=condition=complete job/lpmde-migrations -n lpmde-production --timeout=300s
-          kubectl logs job/lpmde-migrations -n lpmde-production
-          
-      - name: Show deployment status
-        run: |
-          kubectl get all -n lpmde-production
-=======
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     environment:
       name: production
@@ -336,4 +266,3 @@ jobs:
             docker pull ghcr.io/${{ github.repository }}:latest
             docker-compose down
             docker-compose up -d
->>>>>>> 2a2a3044f9adead3da88b05626bcae0a87f58ad4
