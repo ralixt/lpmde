@@ -11,8 +11,8 @@ spec:
       restartPolicy: OnFailure
       containers:
       - name: migrations
-        image: ghcr.io/br-y-/lpmde_git:latest
-        imagePullPolicy: Always
+        image: lpmde:local
+        imagePullPolicy: IfNotPresent
         command:
         - /bin/bash
         - -c
@@ -36,6 +36,4 @@ spec:
             secretKeyRef:
               name: lpmde-secrets
               key: database-url
-      imagePullSecrets:
-      - name: ghcr-secret
   backoffLimit: 3

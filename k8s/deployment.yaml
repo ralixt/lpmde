@@ -6,7 +6,7 @@ metadata:
   labels:
     app: lpmde
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: lpmde
@@ -15,22 +15,57 @@ spec:
       labels:
         app: lpmde
     spec:
+      initContainers:
+      - name: wait-for-deps
+        image: busybox:1.35
+        command:
+          - 'sh'
+          - '-c'
+          - 'until nc -z postgres 5432 && nc -z keycloak 8080 && nc -z rabbitmq 5672; do echo waiting for dependencies; sleep 2; done'
       containers:
       - name: lpmde-app
-        image: ghcr.io/br-y-/lpmde_git:latest
-        imagePullPolicy: Always
+        image: lpmde:latest
+        imagePullPolicy: Never
         ports:
-        - containerPort: 80
+        - name: http
+          containerPort: 80
+          protocol: TCP
         env:
         - name: APP_ENV
-          value: "prod"
+          valueFrom:
+            configMapKeyRef:
+              name: lpmde-config
+              key: APP_ENV
         - name: APP_DEBUG
-          value: "0"
+          valueFrom:
+            configMapKeyRef:
+              name: lpmde-config
+              key: APP_DEBUG
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
               name: lpmde-secrets
               key: database-url
+        - name: MESSENGER_TRANSPORT_DSN
+          valueFrom:
+            configMapKeyRef:
+              name: lpmde-config
+              key: MESSENGER_TRANSPORT_DSN
+        - name: KEYCLOAK_URL
+          valueFrom:
+            configMapKeyRef:
+              name: lpmde-config
+              key: KEYCLOAK_URL
+        - name: KEYCLOAK_REALM
+          valueFrom:
+            configMapKeyRef:
+              name: lpmde-config
+              key: KEYCLOAK_REALM
+        - name: KEYCLOAK_CLIENT_ID
+          valueFrom:
+            configMapKeyRef:
+              name: lpmde-config
+              key: KEYCLOAK_CLIENT_ID
         resources:
           requests:
             memory: "256Mi"
@@ -42,13 +77,34 @@ spec:
           httpGet:
             path: /
             port: 80
-          initialDelaySeconds: 30
+          initialDelaySeconds: 45
           periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /
             port: 80
-          initialDelaySeconds: 10
+          initialDelaySeconds: 20
           periodSeconds: 5
-      imagePullSecrets:
-      - name: ghcr-secret
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lpmde-service
+  namespace: lpmde-production
+  labels:
+    app: lpmde
+spec:
+  type: NodePort
+  selector:
+    app: lpmde
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+    nodePort: 30080
+    name: http
