@@ -8,10 +8,10 @@ RUN apk add --no-cache rabbitmq-c-dev autoconf g++ make linux-headers \
     && docker-php-ext-enable amqp
 
 COPY composer.json composer.lock ./
-RUN composer install --prefer-dist --no-dev --no-scripts --no-progress --no-interaction --optimize-autoloader
+RUN composer install --prefer-dist --no-scripts --no-progress --no-interaction --optimize-autoloader
 
 # Stage 2: runtime PHP Apache avec ext-amqp
-FROM php:8.2-apache
+FROM php:8.4-apache
 RUN apt-get update && apt-get install -y \
     libicu-dev \
     libzip-dev \

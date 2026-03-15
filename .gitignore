@@ -3,6 +3,7 @@
 /.env.local
 /.env.local.php
 /.env.*.local
+/.env.local.bak-kind
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
 /var/
@@ -38,6 +39,10 @@ templates copy/
 composer copy.json
 README copy.md
 ###< Backup folders ###
+
+###> Kind sandbox ###
+/k8s/kind/secret.yaml
+###< Kind sandbox ###
 
 ###> symfony/asset-mapper ###
 /public/assets/
