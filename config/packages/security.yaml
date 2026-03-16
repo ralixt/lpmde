@@ -21,9 +21,21 @@ security:
 
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
+    #
+    # IMPORTANT : L'authentification est gérée manuellement via session Keycloak
+    # (SecurityController::callbackKeycloak → session 'is_authenticated').
+    # Les routes protégées (/troc/new, /troc/*/edit, etc.) vérifient la session
+    # directement dans TrocController et SecurityController.
+    # Les règles ci-dessous documentent l'intention de sécurité.
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/profile, roles: PUBLIC_ACCESS }
+        - { path: ^/troc/new, roles: PUBLIC_ACCESS }
+        - { path: ^/troc/mes-annonces, roles: PUBLIC_ACCESS }
+        - { path: ^/troc/\d+/edit, roles: PUBLIC_ACCESS }
+        - { path: ^/troc/\d+/delete, roles: PUBLIC_ACCESS }
+        - { path: ^/troc, roles: PUBLIC_ACCESS }
+        - { path: ^/, roles: PUBLIC_ACCESS }
 
 when@test:
     security:
