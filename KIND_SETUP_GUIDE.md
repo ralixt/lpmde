@@ -150,11 +150,15 @@ DATABASE_URL="sqlite:///%kernel.project_dir%/var/data_dev.db"
 
 # RabbitMQ exposé localement via port-forward
 # kubectl port-forward -n lpmde-sandbox svc/rabbitmq 5672:5672
-MESSENGER_TRANSPORT_DSN=amqp://guest:guest@127.0.0.1:5672/%2f/messages
+# Container Docker doit utiliser host.docker.internal pour accéder au port-forward de l'hôte
+MESSENGER_TRANSPORT_DSN=amqp://guest:guest@host.docker.internal:5672/%2f/messages
 
-# Keycloak exposé localement via port-forward
+# Keycloak avec hostname=localhost fixé (pour token issuer cohérent)
 # kubectl port-forward -n lpmde-sandbox svc/keycloak 8080:8080
+# Navigateur : localhost:8080 (via port-forward)
 KEYCLOAK_URL=http://localhost:8080
+# Backend serveur : host.docker.internal:8080 (container Docker -> hôte)
+KEYCLOAK_INTERNAL_URL=http://host.docker.internal:8080
 KEYCLOAK_REALM=symfony-app
 KEYCLOAK_CLIENT_ID=symfony-app
 KEYCLOAK_CLIENT_SECRET=7g4hUZzxEbpEegkTA4v1L8w3RICCbe1x
@@ -169,8 +173,9 @@ Get-Content .env.local
 ```
 
 **Points importants :**
-- `MESSENGER_TRANSPORT_DSN`: Pointe vers `127.0.0.1:5672` (accessible via port-forward RabbitMQ)
-- `KEYCLOAK_URL`: Pointe vers `localhost:8080` (accessible via port-forward Keycloak)
+- `MESSENGER_TRANSPORT_DSN`: Pointe vers `host.docker.internal:5672` (container Docker accédant au port-forward hôte)
+- `KEYCLOAK_URL`: Pointe vers `localhost:8080` (redirections navigateur via port-forward)
+- `KEYCLOAK_INTERNAL_URL`: Pointe vers `host.docker.internal:8080` (appels backend du serveur Symfony)
 - `KEYCLOAK_REDIRECT_URI`: Doit correspondre à la configuration dans Keycloak
 
 ---
@@ -425,15 +430,42 @@ http://localhost:8080
 # - Valid Redirect URIs: http://localhost:8000/login/keycloak/callback
 ```
 
-### Problème : Container Docker ne peut pas joindre Keycloak
+### Problème : OAuth2 token 401 Unauthorized lors du userinfo
 
-**Raison :** Network namespace isolation
+**Raison :** Token issuer incompatible entre navigateur et serveur.
 
-**Solution :** (Déjà configuré dans `.env.local`)
-- Container ne peut **pas** utiliser `127.0.0.1:8080` (localhost du container)
-- Must use `host.docker.internal:8080` **OU** `localhost:8080` via port-forward (en passant par l'hôte)
+**Solution :** Keycloak doit avoir un `--hostname` fixé pour que l'issuer soit cohérent peu importe l'URL d'accès. 
 
-Configuration actuelle : `KEYCLOAK_URL=http://localhost:8080` avec port-forward actif.
+**Vérification dans `k8s/kind/keycloak-deployment.yaml` :**
+```yaml
+args:
+  - start-dev
+  - --http-enabled=true
+  - --hostname=localhost          # ← CRUCIAL : fixe l'issuer
+  - --hostname-strict=false
+```
+
+Si absent, ajoutez-le et relancez : `kubectl apply -f k8s/kind/keycloak-deployment.yaml`
+
+### Problème : Container Docker ne peut pas joindre les services (RabbitMQ, Keycloak)
+
+**Raison :** Network namespace isolation - le localhost du container n'est pas le même que l'hôte Windows.
+
+**Solution :** Utiliser `host.docker.internal` pour les appels backend (sauf redirections navigateur).
+
+**Configuration dans `.env.local` :**
+```
+# Backend (container -> hôte)
+MESSENGER_TRANSPORT_DSN=amqp://guest:guest@host.docker.internal:5672/%2f/messages
+KEYCLOAK_INTERNAL_URL=http://host.docker.internal:8080
+
+# Frontend (navigateur)
+KEYCLOAK_URL=http://localhost:8080
+```
+
+La distinction est importante :
+- `localhost:8080` = port-forward local (navigateur peut l'utiliser)
+- `host.docker.internal:8080` = accès direct au port-forward depuis le container
 
 ---
 
