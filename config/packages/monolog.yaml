@@ -9,6 +9,7 @@ when@dev:
                 type: stream
                 path: "%kernel.logs_dir%/%kernel.environment%.log"
                 level: debug
+                formatter: monolog.formatter.json
                 channels: ["!event"]
             console:
                 type: console
@@ -32,6 +33,13 @@ when@test:
 when@prod:
     monolog:
         handlers:
+            # Handler dédié aux événements métier (info) — logs JSON structurés
+            business:
+                type: stream
+                path: "%kernel.logs_dir%/business.log"
+                level: info
+                formatter: monolog.formatter.json
+                channels: ["!event", "!doctrine", "!deprecation"]
             main:
                 type: fingers_crossed
                 action_level: error
