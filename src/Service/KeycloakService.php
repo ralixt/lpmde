@@ -7,6 +7,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 class KeycloakService
 {
     private string $keycloakUrl;
+    private string $keycloakInternalUrl;
     private string $realm;
     private string $clientId;
     private string $clientSecret;
@@ -16,11 +17,32 @@ class KeycloakService
         private HttpClientInterface $httpClient
     ) {
         // Configuration Keycloak - À adapter selon votre installation
-        $this->keycloakUrl = $_ENV['KEYCLOAK_URL'] ?? 'http://localhost:8080';
-        $this->realm = $_ENV['KEYCLOAK_REALM'] ?? 'master';
-        $this->clientId = $_ENV['KEYCLOAK_CLIENT_ID'] ?? 'symfony-app';
-        $this->clientSecret = $_ENV['KEYCLOAK_CLIENT_SECRET'] ?? '';
-        $this->redirectUri = $_ENV['KEYCLOAK_REDIRECT_URI'] ?? 'http://localhost:8000/login/keycloak/callback';
+        $this->keycloakUrl = $this->getEnvValue('KEYCLOAK_URL', 'http://localhost:8080');
+        $this->keycloakInternalUrl = $this->getEnvValue('KEYCLOAK_INTERNAL_URL', $this->keycloakUrl);
+        $this->realm = $this->getEnvValue('KEYCLOAK_REALM', 'master');
+        $this->clientId = $this->getEnvValue('KEYCLOAK_CLIENT_ID', 'symfony-app');
+        $this->clientSecret = $this->getEnvValue('KEYCLOAK_CLIENT_SECRET', '');
+        $this->redirectUri = $this->getEnvValue('KEYCLOAK_REDIRECT_URI', 'http://localhost:8000/login/keycloak/callback');
+    }
+
+    private function getEnvValue(string $name, string $default): string
+    {
+        $serverValue = $_SERVER[$name] ?? null;
+        if (is_string($serverValue) && $serverValue !== '') {
+            return $serverValue;
+        }
+
+        $envValue = $_ENV[$name] ?? null;
+        if (is_string($envValue) && $envValue !== '') {
+            return $envValue;
+        }
+
+        $getenvValue = getenv($name);
+        if (is_string($getenvValue) && $getenvValue !== '') {
+            return $getenvValue;
+        }
+
+        return $default;
     }
 
     public function getAuthorizationUrl(string $state): string
@@ -71,7 +93,7 @@ class KeycloakService
     {
         return sprintf(
             '%s/realms/%s/protocol/openid-connect/token',
-            $this->keycloakUrl,
+            $this->keycloakInternalUrl,
             $this->realm
         );
     }
@@ -80,7 +102,7 @@ class KeycloakService
     {
         return sprintf(
             '%s/realms/%s/protocol/openid-connect/userinfo',
-            $this->keycloakUrl,
+            $this->keycloakInternalUrl,
             $this->realm
         );
     }
