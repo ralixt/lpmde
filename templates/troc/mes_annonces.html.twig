@@ -1,0 +1,94 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes annonces{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-background-dark py-8 px-4">
+    <div class="max-w-5xl mx-auto">
+
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-white font-display">Mes annonces</h1>
+                <p class="text-slate-400 mt-1">{{ annonces|length }} annonce(s) publiée(s)</p>
+            </div>
+            <a href="{{ path('troc_new') }}"
+               class="bg-primary hover:bg-red-700 text-white px-5 py-2 rounded font-medium transition-colors">
+                + Nouvelle annonce
+            </a>
+        </div>
+
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="mb-4 p-4 rounded border
+                    {% if type == 'success' %}bg-green-900/50 border-green-700 text-green-300
+                    {% elseif type == 'error' %}bg-red-900/50 border-primary text-red-300
+                    {% else %}bg-slate-800 border-slate-600 text-slate-300{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        {% if annonces is empty %}
+            <div class="text-center py-20 text-slate-500 bg-surface-dark rounded-xl border border-slate-800">
+                <p class="text-6xl mb-4">📭</p>
+                <p class="text-xl text-slate-400">Vous n'avez pas encore d'annonces.</p>
+                <a href="{{ path('troc_new') }}" class="mt-4 inline-block text-primary hover:underline">
+                    Publiez votre première annonce →
+                </a>
+            </div>
+        {% else %}
+            <div class="space-y-4">
+                {% for annonce in annonces %}
+                    <div class="bg-surface-dark rounded-xl border border-slate-800 p-6 flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-4 min-w-0">
+                            <div class="text-3xl flex-shrink-0">
+                                {% if annonce.category == 'Figurines' %}🗿
+                                {% elseif annonce.category == 'Films' %}🎬
+                                {% elseif annonce.category == 'Jeux' %}🎲
+                                {% elseif annonce.category == 'Fanzines' %}📰
+                                {% else %}📚{% endif %}
+                            </div>
+                            <div class="min-w-0">
+                                <h3 class="text-white font-semibold truncate">{{ annonce.title }}</h3>
+                                <div class="flex gap-2 mt-1 flex-wrap">
+                                    <span class="text-xs px-2 py-0.5 rounded
+                                        {% if annonce.type == 'exchange' %}bg-blue-900/50 text-blue-300{% else %}bg-green-900/50 text-green-300{% endif %}">
+                                        {% if annonce.type == 'exchange' %}⇄ Échange{% else %}🎁 Don{% endif %}
+                                    </span>
+                                    <span class="text-xs text-slate-400">{{ annonce.category }}</span>
+                                    <span class="text-xs text-slate-500">{{ annonce.createdAt|date('d/m/Y') }}</span>
+                                    <span class="text-xs px-2 py-0.5 rounded
+                                        {% if annonce.status == 'active' %}bg-green-900/50 text-green-400
+                                        {% elseif annonce.status == 'closed' %}bg-slate-700 text-slate-400
+                                        {% else %}bg-yellow-900/50 text-yellow-400{% endif %}">
+                                        {{ annonce.status }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 flex-shrink-0">
+                            <a href="{{ path('troc_show', {id: annonce.id}) }}"
+                               class="px-3 py-1.5 text-sm bg-slate-700 hover:bg-slate-600 text-white rounded transition-colors">
+                                Voir
+                            </a>
+                            <a href="{{ path('troc_edit', {id: annonce.id}) }}"
+                               class="px-3 py-1.5 text-sm bg-slate-700 hover:bg-slate-600 text-white rounded transition-colors">
+                                Modifier
+                            </a>
+                            <form method="post" action="{{ path('troc_delete', {id: annonce.id}) }}"
+                                  onsubmit="return confirm('Supprimer cette annonce ?')">
+                                <button type="submit"
+                                        class="px-3 py-1.5 text-sm bg-primary/20 hover:bg-primary text-red-400 hover:text-white rounded transition-colors">
+                                    Supprimer
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

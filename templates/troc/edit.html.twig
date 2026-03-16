@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier l'annonce{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-background-dark py-8 px-4">
+    <div class="max-w-2xl mx-auto">
+
+        <a href="{{ path('troc_show', {id: annonce.id}) }}" class="text-slate-400 hover:text-white text-sm mb-6 inline-block">← Retour à l'annonce</a>
+
+        <div class="bg-surface-dark rounded-xl border border-slate-800 p-8">
+            <h1 class="text-3xl font-bold text-white font-display mb-2">
+                Modifier l'annonce
+            </h1>
+            <p class="text-slate-400 mb-8 truncate">{{ annonce.title }}</p>
+
+            {{ form_start(form, {attr: {class: 'space-y-6'}}) }}
+
+                {% for field in form %}
+                    <div>
+                        {{ form_label(field, null, {label_attr: {class: 'block text-slate-300 text-sm font-medium mb-2'}}) }}
+                        {{ form_widget(field) }}
+                        {{ form_errors(field) }}
+                    </div>
+                {% endfor %}
+
+                <div class="flex gap-4 pt-4">
+                    <button type="submit"
+                            class="flex-1 bg-primary hover:bg-red-700 text-white py-3 rounded font-semibold transition-colors">
+                        Enregistrer les modifications
+                    </button>
+                    <a href="{{ path('troc_show', {id: annonce.id}) }}"
+                       class="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded font-medium transition-colors">
+                        Annuler
+                    </a>
+                </div>
+
+            {{ form_end(form) }}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

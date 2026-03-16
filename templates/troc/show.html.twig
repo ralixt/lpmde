@@ -1,0 +1,81 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ annonce.title }}{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-background-dark py-8 px-4">
+    <div class="max-w-3xl mx-auto">
+
+        <a href="{{ path('troc_index') }}" class="text-slate-400 hover:text-white text-sm mb-6 inline-block">← Retour aux annonces</a>
+
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="mb-4 p-4 rounded border
+                    {% if type == 'success' %}bg-green-900/50 border-green-700 text-green-300
+                    {% elseif type == 'error' %}bg-red-900/50 border-primary text-red-300
+                    {% else %}bg-slate-800 border-slate-600 text-slate-300{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="bg-surface-dark rounded-xl border border-slate-800 overflow-hidden">
+            {# Image #}
+            {% if annonce.imageUrl %}
+                <img src="{{ annonce.imageUrl }}" alt="{{ annonce.title }}" class="w-full h-64 object-cover">
+            {% else %}
+                <div class="h-32 bg-slate-900 flex items-center justify-center text-6xl">
+                    {% if annonce.category == 'Figurines' %}🗿
+                    {% elseif annonce.category == 'Films' %}🎬
+                    {% elseif annonce.category == 'Jeux' %}🎲
+                    {% elseif annonce.category == 'Fanzines' %}📰
+                    {% else %}📚{% endif %}
+                </div>
+            {% endif %}
+
+            <div class="p-8">
+                {# Badges #}
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <span class="px-3 py-1 rounded-full text-sm font-medium
+                        {% if annonce.type == 'exchange' %}bg-blue-900/50 text-blue-300{% else %}bg-green-900/50 text-green-300{% endif %}">
+                        {% if annonce.type == 'exchange' %}⇄ Échange{% else %}🎁 Don{% endif %}
+                    </span>
+                    <span class="px-3 py-1 rounded-full text-sm bg-slate-700 text-slate-300">{{ annonce.category }}</span>
+                    <span class="px-3 py-1 rounded-full text-sm bg-slate-700 text-slate-300">État : {{ annonce.condition }}</span>
+                </div>
+
+                <h1 class="text-3xl font-bold text-white font-display mb-4">{{ annonce.title }}</h1>
+
+                <div class="text-slate-300 leading-relaxed mb-8 whitespace-pre-wrap">{{ annonce.description }}</div>
+
+                {# Infos propriétaire #}
+                <div class="border-t border-slate-700 pt-6 flex items-center justify-between">
+                    <div>
+                        <p class="text-slate-400 text-sm">Publié par</p>
+                        <p class="text-white font-medium">{{ annonce.owner.getFullName() }}</p>
+                        <p class="text-slate-500 text-xs mt-1">{{ annonce.createdAt|date('d/m/Y à H:i') }}</p>
+                    </div>
+
+                    {# Actions propriétaire #}
+                    {% if app.session.get('user_id') == annonce.owner.id %}
+                        <div class="flex gap-3">
+                            <a href="{{ path('troc_edit', {id: annonce.id}) }}"
+                               class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded transition-colors text-sm">
+                                Modifier
+                            </a>
+                            <form method="post" action="{{ path('troc_delete', {id: annonce.id}) }}"
+                                  onsubmit="return confirm('Supprimer cette annonce ?')">
+                                <button type="submit"
+                                        class="px-4 py-2 bg-primary hover:bg-red-700 text-white rounded transition-colors text-sm">
+                                    Supprimer
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
