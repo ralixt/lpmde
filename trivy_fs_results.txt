@@ -1,0 +1,25 @@
+Trivy Filesystem Scan — La Petite Maison de l'Épouvante
+Date : 2026-03-16
+Commande : trivy fs . --severity HIGH,CRITICAL --format table
+
+2026-03-16T18:11:01Z	INFO	[vulndb] Downloading vulnerability DB...
+2026-03-16T18:11:14Z	INFO	[vulndb] Artifact successfully downloaded
+2026-03-16T18:11:14Z	INFO	[vuln] Vulnerability scanning is enabled
+2026-03-16T18:11:14Z	INFO	[secret] Secret scanning is enabled
+2026-03-16T18:14:18Z	INFO	Suppressing dependencies for development and testing.
+2026-03-16T18:14:18Z	INFO	Number of language-specific files	num=1
+2026-03-16T18:14:18Z	INFO	[composer] Detecting vulnerabilities...
+
+Report Summary
+
++---------------+----------+-----------------+---------+
+|    Target     |   Type   | Vulnerabilities | Secrets |
++---------------+----------+-----------------+---------+
+| composer.lock | composer |        0        |    -    |
++---------------+----------+-----------------+---------+
+
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+RÉSULTAT : 0 vulnérabilité HIGH/CRITICAL dans les dépendances Composer.
