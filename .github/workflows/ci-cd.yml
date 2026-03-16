@@ -80,18 +80,18 @@ jobs:
         run: mkdir -p var/log
 
       - name: Run unit tests
-        run: php bin/phpunit --testsuite=unit --coverage-cobertura=var/log/cobertura.xml --log-junit=var/log/junit.xml
+        run: php bin/phpunit --testsuite=unit --coverage-clover=coverage.xml --log-junit=junit-unit.xml
         env:
           APP_ENV: test
 
-      - name: Upload test results
+      - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
+          name: coverage
           path: |
-            var/log/junit.xml
-            var/log/cobertura.xml
+            coverage.xml
+            junit-unit.xml
         continue-on-error: true
 
   e2e-test-job:
@@ -143,11 +143,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download test artifacts
+      - name: Download coverage artifacts
         uses: actions/download-artifact@v4
         with:
-          name: test-results
-          path: var/log/
+          name: coverage
+          path: .
         continue-on-error: true
 
       - name: SonarCloud Scan
