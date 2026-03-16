@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 use App\Repository\UserRepository;
@@ -32,6 +34,14 @@ class User implements UserInterface
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $lastName = null;
+
+    #[ORM\OneToMany(mappedBy: 'owner', targetEntity: TrocAnnonce::class, orphanRemoval: true)]
+    private Collection $trocAnnonces;
+
+    public function __construct()
+    {
+        $this->trocAnnonces = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -119,5 +129,10 @@ class User implements UserInterface
     public function getFullName(): string
     {
         return trim($this->firstName . ' ' . $this->lastName) ?: $this->username;
+    }
+
+    public function getTrocAnnonces(): Collection
+    {
+        return $this->trocAnnonces;
     }
 }
