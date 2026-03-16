@@ -16,7 +16,9 @@ env:
   DOCKER_DRIVER: overlay2
 
 jobs:
-  # Stage Install
+  # ═══════════════════════════════════════
+  # STAGE 1 : INSTALL
+  # ═══════════════════════════════════════
   install:
     runs-on: ubuntu-latest
     steps:
@@ -27,24 +29,23 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: pdo, pdo_mysql
+          extensions: pdo_sqlite, intl
           tools: composer
+          coverage: xdebug
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
             ${{ runner.os }}-composer-
 
-      - name: Create .env file for CI
-        run: |
-          echo "APP_ENV=test" > .env
-          echo "APP_SECRET=test_secret_for_ci_only" >> .env
-          echo "DATABASE_URL=postgresql://test:test@localhost:5432/test?serverVersion=16" >> .env
       - name: Install dependencies
         run: composer install --prefer-dist --no-ansi --no-interaction --no-progress --optimize-autoloader
+
+      - name: Install npm dependencies
+        run: npm ci --if-present
 
       - name: Upload vendor artifact
         uses: actions/upload-artifact@v4
@@ -53,7 +54,71 @@ jobs:
           path: vendor/
           retention-days: 1
 
-  # Stage Test
+  # ═══════════════════════════════════════
+  # STAGE 2 : TESTS (5 jobs en parallèle)
+  # ═══════════════════════════════════════
+  unit-test:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_sqlite, intl
+          coverage: xdebug
+
+      - name: Download vendor artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: vendor
+          path: vendor/
+
+      - name: Create log directory
+        run: mkdir -p var/log
+
+      - name: Run unit tests
+        run: php bin/phpunit --testsuite=unit --coverage-cobertura=var/log/cobertura.xml --log-junit=var/log/junit.xml
+        env:
+          APP_ENV: test
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            var/log/junit.xml
+            var/log/cobertura.xml
+        continue-on-error: true
+
+  e2e-test-job:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_sqlite, intl
+
+      - name: Download vendor artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: vendor
+          path: vendor/
+
+      - name: Run functional tests
+        run: php bin/phpunit --testsuite=functional --no-coverage
+        env:
+          APP_ENV: test
+
   sast-npm-audit:
     runs-on: ubuntu-latest
     needs: install
@@ -76,6 +141,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download test artifacts
         uses: actions/download-artifact@v4
@@ -89,11 +156,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.projectKey=${{ github.event.repository.name }}
-            -Dsonar.sources=src
-            -Dsonar.php.coverage.reportPaths=var/log/cobertura.xml
         continue-on-error: true
 
   trivy-fs-audit:
@@ -112,81 +174,12 @@ jobs:
           exit-code: '0'
         continue-on-error: true
 
-  unit-test:
+  # ═══════════════════════════════════════
+  # STAGE 3 : RELEASE (build Docker + push GHCR)
+  # ═══════════════════════════════════════
+  build-image-job:
     runs-on: ubuntu-latest
-    needs: install
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create .env file for tests
-        run: |
-          echo "APP_ENV=test" > .env
-          echo "APP_SECRET=test_secret_for_ci_only" >> .env
-          echo "DATABASE_URL=postgresql://test:test@localhost:5432/test?serverVersion=16" >> .env
-      - name: Download vendor artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: vendor
-          path: vendor/
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: pdo, pdo_mysql, pcov
-          coverage: pcov
-
-      - name: Create log directory
-        run: mkdir -p var/log
-
-      - name: Run unit tests
-        run: php bin/phpunit --coverage-cobertura=var/log/cobertura.xml --log-junit=var/log/junit.xml
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results
-          path: |
-            var/log/junit.xml
-            var/log/cobertura.xml
-        continue-on-error: true
-
-  e2e-test:
-    runs-on: ubuntu-latest
-    needs: install
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create .env file for tests
-        run: |
-          echo "APP_ENV=test" > .env
-          echo "APP_SECRET=test_secret_for_ci_only" >> .env
-          echo "DATABASE_URL=postgresql://test:test@localhost:5432/test?serverVersion=16" >> .env
-      - name: Download vendor artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: vendor
-          path: vendor/
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: pdo, pdo_mysql
-
-      - name: Run E2E tests
-        run: |
-          echo "Running E2E tests"
-          php bin/phpunit --testsuite=e2e --no-coverage
-        continue-on-error: false
-
-  # Stage Release
-  build-image:
-    runs-on: ubuntu-latest
-    needs: [unit-test, e2e-test]
+    needs: [unit-test, e2e-test-job, sast-npm-audit, trivy-fs-audit]
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop'
     permissions:
       contents: read
@@ -225,44 +218,35 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # Stage Staging
-  deploy-staging:
+  # ═══════════════════════════════════════
+  # STAGE 4 : STAGING (déploiement)
+  # ═══════════════════════════════════════
+  deploy-staging-job:
     runs-on: ubuntu-latest
-    needs: build-image
+    needs: build-image-job
     if: github.ref == 'refs/heads/develop'
     environment:
       name: staging
       url: https://staging.example.com
     steps:
       - name: Deploy to staging
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.STAGING_SERVER }}
-          username: ${{ secrets.STAGING_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd ${{ secrets.STAGING_PATH }}
-            docker pull ghcr.io/${{ github.repository }}:latest
-            docker-compose down
-            docker-compose up -d
+        run: |
+          echo "🚀 Déploiement staging"
+          echo "Image: ghcr.io/${{ github.repository }}:latest"
+          echo "Note: Le déploiement réel nécessite la configuration des secrets SSH"
+          # ssh user@server "docker pull ghcr.io/... && docker-compose up -d"
 
-  # Stage Production
   deploy-production:
     runs-on: ubuntu-latest
-    needs: build-image
+    needs: build-image-job
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     environment:
       name: production
       url: https://production.example.com
     steps:
       - name: Deploy to production
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.PRODUCTION_SERVER }}
-          username: ${{ secrets.PRODUCTION_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd ${{ secrets.PRODUCTION_PATH }}
-            docker pull ghcr.io/${{ github.repository }}:latest
-            docker-compose down
-            docker-compose up -d
+        run: |
+          echo "🚀 Déploiement production"
+          echo "Image: ghcr.io/${{ github.repository }}:latest"
+          echo "Note: Le déploiement réel nécessite la configuration des secrets SSH"
+          # ssh user@server "docker pull ghcr.io/... && docker-compose up -d"
