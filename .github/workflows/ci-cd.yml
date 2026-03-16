@@ -46,9 +46,6 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-ansi --no-interaction --no-progress --optimize-autoloader
 
-      - name: Install npm dependencies
-        run: npm ci --if-present
-
       - name: Upload vendor artifact
         uses: actions/upload-artifact@v4
         with:
