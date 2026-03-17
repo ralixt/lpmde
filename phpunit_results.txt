@@ -1,0 +1,10 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.0
+Configuration: C:\Users\ragee\Documents\cesi MASTER\2ème année\BLOC3 - Superviser et assurer le développement des applications logicielles\RB3 (individuel)\lpmde-solo\lpmde\phpunit.xml.dist
+
+...........................                                       27 / 27 (100%)
+
+Time: 00:21.068, Memory: 66.00 MB
+
+[30;42mOK (27 tests, 41 assertions)[0m

@@ -1,0 +1,90 @@
+=== TEST EXPÉRIMENTATION RABBITMQ — Tue Mar 17 19:17:01     2026 ===
+
+ENVIRONNEMENT
+=============
+- Cluster Kind : kind-lpmde-sandbox (namespace lpmde-sandbox)
+- Pod RabbitMQ : rabbitmq-7574b88c9f-wpssk (Running, 2 restarts)
+- Port-forward actif : 5672 (AMQP), 15672 (Management)
+- App Symfony : container lpmde-web-kind (php -S 0.0.0.0:8000)
+- Transport DSN : amqp://guest:guest@host.docker.internal:5672/%2f/messages
+
+ÉTAPE 1 — Vérification Management RabbitMQ
+==========================================
+$ curl -s -o /dev/null -w "HTTP %{http_code}" http://localhost:15672/
+→ HTTP 200 ✅
+
+ÉTAPE 2 — État initial de la queue
+====================================
+$ curl -s -u guest:guest http://localhost:15672/api/queues/%2f/
+→ Queue: messages | Messages: 53 | Consumers: 0
+  (Messages accumulés lors des tests précédents — queue durable)
+
+ÉTAPE 3 — Publication d'un message GhostAlert (Poltergeist)
+===========================================================
+$ docker exec -e MESSENGER_TRANSPORT_DSN=... lpmde-web-kind sh -c   'php bin/console app:dispatch:ghost-alert --location="Cave a vin" --monster="Poltergeist"'
+
+Sortie :
+  [OK] Message GhostAlert publie: Poltergeist dans Cave a vin. ✅
+
+Log Symfony Messenger :
+  INFO [messenger] Sending message App\Message\GhostAlert with async sender using AmqpTransport
+
+ÉTAPE 4 — Queue APRÈS publication
+===================================
+→ Queue: messages | Messages: 54 (+1 confirmé) ✅
+
+ÉTAPE 5 — Consommation du message (--limit=1)
+=============================================
+$ docker exec -e MESSENGER_TRANSPORT_DSN=... lpmde-web-kind sh -c   'php bin/console messenger:consume async --limit=1 -vv'
+
+Sortie :
+  18:16:03 INFO [messenger] Received message App\Message\UserLoginNotification
+  ✅ NOTIFICATION TRAITÉE : L'utilisateur 'Rag Nag' s'est connecté à 06:22:39
+  18:16:05 INFO [messenger] Message handled by UserLoginNotificationHandler::__invoke
+  18:16:08 INFO [messenger] App\Message\UserLoginNotification was handled successfully (acknowledging to transport)
+  18:16:08 INFO [messenger] Worker stopped (max count: 1)
+
+→ 1 message consommé et acquitté ✅
+
+ÉTAPE 6 — Publication + Consommation GhostAlert (Banshee)
+=========================================================
+
+ [OK] Message GhostAlert publie: Banshee dans Grenier.                          
+
+Consommation :
+
+ [OK] Consuming messages from transport "async".                                
+
+
+ // The worker will automatically exit once it has processed 1 messages or      
+ // received a stop signal via the messenger:stop-workers command.              
+
+ // Quit the worker with CONTROL-C.                                             
+
+18:16:52 INFO      [messenger] Received message App\Message\GhostAlert ["class" => "App\Message\GhostAlert"]
+👻 ALERTE TRAITÉE : Un Vampire a été vu dans : Grenier
+18:16:58 INFO      [messenger] Message App\Message\GhostAlert handled by App\MessageHandler\GhostAlertHandler::__invoke ["class" => "App\Message\GhostAlert","handler" => "App\MessageHandler\GhostAlertHandler::__invoke"]
+18:17:00 INFO      [messenger] App\Message\GhostAlert was handled successfully (acknowledging to transport). ["class" => "App\Message\GhostAlert"]
+18:17:00 INFO      [messenger] Stopping worker. ["transport_names" => ["async"]]
+18:17:00 INFO      [messenger] Worker stopped due to maximum count of 1 messages processed ["count" => 1]
+
+ÉTAPE 7 — Queue APRÈS consommation
+====================================
+"messages":53
+→ Queue: messages | Messages: 52 (54−2 consommés) ✅
+
+RÉSULTAT GLOBAL
+===============
+✅ SUCCÈS — Cycle publication/consommation RabbitMQ validé
+- Connexion AMQP via port-forward Kind (localhost:5672 → pod K8s) : OK
+- Publication via Symfony Messenger (AmqpTransport) : OK
+- Consommation via messenger:consume async : OK
+- Acquittement du message (ACK) : OK
+- Handler exécuté côté consommateur : OK
+
+TOPOLOGIE K8s UTILISÉE
+======================
+lpmde-web-kind (Docker container)
+  └─ AMQP → host.docker.internal:5672 (port-forward kubectl)
+       └─ svc/rabbitmq (lpmde-sandbox)
+            └─ pod rabbitmq-7574b88c9f-wpssk (RabbitMQ 3.x)
