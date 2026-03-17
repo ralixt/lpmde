@@ -48,3 +48,7 @@ README copy.md
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+###> Tasks / Prompts (local only) ###
+TACHES.md
+###< Tasks / Prompts (local only) ###
