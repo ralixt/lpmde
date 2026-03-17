@@ -9,7 +9,7 @@
         <div class="flex justify-between items-center mb-8">
             <div>
                 <h1 class="text-3xl font-bold text-white font-display">Mes annonces</h1>
-                <p class="text-slate-400 mt-1">{{ annonces|length }} annonce(s) publiée(s)</p>
+                <p class="text-slate-400 mt-1">{{ annonces|length }} annonce{{ annonces|length > 1 ? 's' : '' }} publiée{{ annonces|length > 1 ? 's' : '' }}</p>
             </div>
             <a href="{{ path('troc_new') }}"
                class="bg-primary hover:bg-red-700 text-white px-5 py-2 rounded font-medium transition-colors">

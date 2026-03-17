@@ -44,7 +44,7 @@
 
         {# Bouton publier #}
         <div class="flex justify-between items-center mb-6">
-            <p class="text-slate-400 text-sm">{{ annonces|length }} annonce(s)</p>
+            <p class="text-slate-400 text-sm">{{ annonces|length }} annonce{{ annonces|length > 1 ? 's' : '' }} </p>
             {% if app.session.get('is_authenticated') %}
                 <a href="{{ path('troc_new') }}"
                    class="bg-primary hover:bg-red-700 text-white px-5 py-2 rounded font-medium transition-colors">
