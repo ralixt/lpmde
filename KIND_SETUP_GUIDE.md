@@ -4,6 +4,7 @@ Guide complet pour lancer le projet LPMDE avec Kubernetes Kind en local.
 
 ## Table des matières
 
+0. [🚀 Quick Start (Automatisé)](#-quick-start-automatisé)
 1. [Prérequis](#prérequis)
 2. [1. Initialisation du cluster Kind](#1-initialisation-du-cluster-kind)
 3. [2. Déploiement de l'infrastructure](#2-déploiement-de-linfrastructure)
@@ -13,6 +14,30 @@ Guide complet pour lancer le projet LPMDE avec Kubernetes Kind en local.
 7. [6. Port-forwards](#6-port-forwards)
 8. [7. Validation et tests](#7-validation-et-tests)
 9. [Troubleshooting](#troubleshooting)
+
+---
+
+## 🚀 Quick Start (Automatisé)
+
+**Le moyen le plus rapide pour lancer le PoC :**
+
+```powershell
+# Une seule commande pour démarrer tout !
+.\start-kind-dev.ps1
+```
+
+Ce script automatise :
+- ✅ Création du cluster Kind (si nécessaire)
+- ✅ Déploiement de l'infrastructure Kubernetes
+- ✅ Attente que tous les pods soient Ready
+- ✅ Configuration de `.env.local`
+- ✅ Lancement des port-forwards
+- ✅ Démarrage du conteneur Docker web
+
+**Après quelques minutes, accédez :**
+- 🌐 Application: http://localhost:8000
+- 🔐 Keycloak: http://localhost:8080 (admin/admin)
+- 📊 RabbitMQ: http://localhost:15672 (guest/guest)
 
 ---
 
@@ -283,6 +308,28 @@ LocalPort State
 8080      Listen
 ```
 
+### ⚠️ IMPORTANT : Maintien des port-forwards
+
+**LES DEUX PROCESSUS KUBECTL DOIVENT RESTER ACTIFS !**
+
+Ces deux terminaux PowerShell doivent rester ouverts tant que tu travailles sur le projet :
+- Terminal 1 : `kubectl port-forward ... svc/rabbitmq`
+- Terminal 2 : `kubectl port-forward ... svc/keycloak`
+
+Si tu fermes ces deux terminaux :
+- ❌ RabbitMQ ne sera **pas accessible** → erreur AMQP
+- ❌ Keycloak ne sera **pas accessible** → erreur d'authentification
+- ❌ Le conteneur Docker ne peut **pas se connecter** aux services Kubernetes
+
+**Si tu as fermé accidentellement :**
+```powershell
+# Relance les port-forwards dans deux nouveaux terminaux
+kubectl port-forward -n lpmde-sandbox svc/rabbitmq 5672:5672 15672:15672
+kubectl port-forward -n lpmde-sandbox svc/keycloak 8080:8080
+
+# Le conteneur Docker redémarrera automatiquement la connexion
+```
+
 ---
 
 ## 7. Validation et tests
@@ -411,6 +458,58 @@ kubectl logs -n lpmde-sandbox deploy/keycloak -f
 1. Port-forward RabbitMQ actif: `kubectl port-forward -n lpmde-sandbox svc/rabbitmq 5672:5672`
 2. Credentials corrects dans `.env.local`: `guest:guest`
 3. Adresse correcte: `127.0.0.1` (pas `localhost`)
+
+### ⚠️ Problème : "Could not connect to the AMQP server. Please verify the provided DSN"
+
+**CAUSE MAJEURE :** Les port-forwards Kubernetes ne sont **PAS lancés**.
+
+**Solution immédiate :**
+
+1. **Vérifier que les port-forwards sont actifs :**
+```powershell
+Get-NetTCPConnection -LocalPort 5672, 8080 -ErrorAction SilentlyContinue | 
+  Select-Object LocalPort, State
+```
+
+Si tu ne vois PAS :
+```
+LocalPort State
+5672      Listen
+8080      Listen
+```
+
+2. **Lancer les port-forwards dans DEUX terminaux PowerShell séparés :**
+
+Terminal 1 :
+```powershell
+kubectl port-forward -n lpmde-sandbox svc/rabbitmq 5672:5672 15672:15672
+```
+
+Terminal 2 :
+```powershell
+kubectl port-forward -n lpmde-sandbox svc/keycloak 8080:8080
+```
+
+3. **GARDER CES DEUX TERMINAUX OUVERTS** (ils restent toute la session)
+
+4. **Redémarrer le conteneur Docker :**
+```powershell
+docker stop lpmde-web-kind
+docker run -d `
+  --name lpmde-web-kind `
+  -p 8000:8000 `
+  -v "${PWD}:/var/www/html" `
+  -w /var/www/html `
+  lpmde:kind-poc `
+  sh -c "php -S 0.0.0.0:8000 -t public"
+```
+
+5. **Vérifier la connexion :**
+```powershell
+docker exec lpmde-web-kind sh -lc "php bin/console messenger:stats"
+```
+
+Résultat attendu : Pas d'erreur AMQP ✓
 
 ### Problème : "Client not found" ou redirect URI invalide
 
