@@ -54,14 +54,15 @@ WORKDIR /var/www/html
 COPY --from=composer /app/vendor ./vendor
 COPY . .
 
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
-RUN mkdir -p var/cache var/log \
-    && chown -R www-data:www-data var \
-    && chmod -R 775 var
-
 ENV APP_ENV=prod
 ENV APP_DEBUG=0
+
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html \
+    && mkdir -p var/cache var/log \
+    && chown -R www-data:www-data var \
+    && chmod -R 775 var \
+    && php bin/console cache:warmup --env=prod --no-debug
 
 EXPOSE 80
 CMD ["apache2-foreground"]
