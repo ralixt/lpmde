@@ -40,6 +40,10 @@ composer copy.json
 README copy.md
 ###< Backup folders ###
 
+###> Project temporary files ###
+TACHES.md
+###< Project temporary files ###
+
 ###> Kind sandbox ###
 /k8s/kind/secret.yaml
 ###< Kind sandbox ###
@@ -48,3 +52,5 @@ README copy.md
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+/TACHES.md
