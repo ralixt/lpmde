@@ -1,7 +1,6 @@
-# PROMPT CLAUDE CODE — Vérification et mise en place du pipeline CI/CD GitHub Actions
+# PROMPT CLAUDE CODE — Tests complets : Expérimentation + Charge + Scans
 
 ## CONFIGURATION GIT
-Rappel : tous les commits doivent être à MON nom.
 ```bash
 git config user.name "MON_PRENOM MON_NOM"
 git config user.email "MON_EMAIL@example.com"
@@ -9,303 +8,268 @@ git config user.email "MON_EMAIL@example.com"
 
 ## CONTEXTE
 
-Mon projet Symfony 6.4 "La Petite Maison de l'Épouvante" a besoin d'un pipeline CI/CD GitHub Actions fonctionnel. D'après un rapport d'analyse antérieur, un fichier workflow existait, mais je ne suis pas sûr qu'il soit en place et fonctionnel sur le repo GitHub.
+Mon application Symfony 6.4 tourne en dev avec Docker Desktop + Kind. Je dois :
+1. Valider l'expérimentation bac à sable (tester RabbitMQ et Keycloak dans K8s Kind)
+2. Lancer les tests de charge Siege
+3. Lancer les scans de sécurité Trivy
 
-Le pipeline doit correspondre à cette structure en 4 stages :
-1. **install** — installation des dépendances (Composer, npm)
-2. **test** — 5 jobs en parallèle : e2e-test-job, sast-npm-audit, sonar-audit, trivy-fs-audit, unit-test
-3. **release** — build-image-job (Docker build + push vers GHCR)
-4. **staging** — deploy-staging-job (déploiement)
+Tout se fait en **environnement de développement** (pas besoin de passer en prod).
 
-## MISSION 1 : DIAGNOSTIC COMPLET
+---
 
-Vérifie tout et donne-moi un rapport clair :
+## PARTIE 1 — VALIDATION EXPÉRIMENTATION BAC À SABLE (section 1.2.2)
 
-```bash
-# 1. Vérifier si le dossier .github/workflows existe
-ls -la .github/workflows/ 2>/dev/null
-find . -name "*.yml" -path "*github*" -o -name "*.yaml" -path "*github*" 2>/dev/null
+L'objectif est de **prouver** que les expérimentations fonctionnent réellement. On doit exécuter les tests et capturer les résultats.
 
-# 2. Si un workflow existe, affiche son contenu
-cat .github/workflows/*.yml 2>/dev/null
-cat .github/workflows/*.yaml 2>/dev/null
-
-# 3. Vérifier le remote GitHub
-git remote -v
-
-# 4. Vérifier la branche actuelle
-git branch -a
-
-# 5. Vérifier si des workflows ont déjà tourné (via les logs git)
-git log --oneline --all | head -20
-
-# 6. Vérifier les fichiers de config CI existants
-ls -la .gitlab-ci.yml 2>/dev/null
-ls -la Makefile 2>/dev/null
-ls -la docker-compose*.yml 2>/dev/null
-ls -la Dockerfile* 2>/dev/null
-```
-
-Donne-moi un rapport structuré :
-- ✅ Ce qui existe
-- ❌ Ce qui manque
-- ⚠️ Ce qui existe mais ne fonctionne pas
-
-## MISSION 2 : CRÉER / CORRIGER LE WORKFLOW
-
-Si le workflow n'existe pas ou est incomplet, crée le fichier `.github/workflows/ci.yml` avec cette structure exacte :
-
-```yaml
-name: CI/CD Pipeline
-
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main]
-
-jobs:
-  # ═══════════════════════════════════════
-  # STAGE 1 : INSTALL
-  # ═══════════════════════════════════════
-  install:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: amqp, pdo_sqlite, intl
-          coverage: xdebug
-
-      - name: Cache Composer
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
-
-      - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction
-
-      - name: Cache npm
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: npm-${{ hashFiles('package-lock.json') }}
-
-      - name: Install npm dependencies
-        run: npm ci --if-present
-
-      - name: Upload vendor artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: vendor
-          path: vendor/
-
-      - name: Upload node_modules artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: node_modules
-          path: node_modules/
-
-  # ═══════════════════════════════════════
-  # STAGE 2 : TESTS (5 jobs en parallèle)
-  # ═══════════════════════════════════════
-  unit-test:
-    needs: install
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: amqp, pdo_sqlite, intl
-          coverage: xdebug
-      - uses: actions/download-artifact@v4
-        with:
-          name: vendor
-          path: vendor/
-      - name: Run unit tests
-        run: php bin/phpunit --testsuite=unit
-        env:
-          APP_ENV: test
-
-  e2e-test-job:
-    needs: install
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: amqp, pdo_sqlite, intl
-      - uses: actions/download-artifact@v4
-        with:
-          name: vendor
-          path: vendor/
-      - name: Run functional tests
-        run: php bin/phpunit --testsuite=functional
-        env:
-          APP_ENV: test
-
-  sast-npm-audit:
-    needs: install
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: node_modules
-          path: node_modules/
-      - name: NPM Audit
-        run: npm audit --audit-level=high || true
-
-  sonar-audit:
-    needs: install
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: amqp, pdo_sqlite, intl
-          coverage: xdebug
-      - uses: actions/download-artifact@v4
-        with:
-          name: vendor
-          path: vendor/
-      - name: Run tests with coverage
-        run: php bin/phpunit --coverage-clover=coverage.xml || true
-        env:
-          APP_ENV: test
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v3
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  trivy-fs-audit:
-    needs: install
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run Trivy FS scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          severity: 'HIGH,CRITICAL'
-          exit-code: '1'
-
-  # ═══════════════════════════════════════
-  # STAGE 3 : RELEASE (build Docker + push GHCR)
-  # ═══════════════════════════════════════
-  build-image-job:
-    needs: [unit-test, e2e-test-job, sast-npm-audit, trivy-fs-audit]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
-            ghcr.io/${{ github.repository }}:latest
-
-  # ═══════════════════════════════════════
-  # STAGE 4 : STAGING (déploiement)
-  # ═══════════════════════════════════════
-  deploy-staging-job:
-    needs: build-image-job
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - name: Deploy to staging
-        run: |
-          echo "🚀 Déploiement staging"
-          echo "Image: ghcr.io/${{ github.repository }}:${{ github.sha }}"
-          echo "Note: Le déploiement réel nécessite la configuration des secrets SSH"
-          echo "Pour un déploiement K8s: kubectl set image deployment/lpmde-web lpmde-web=ghcr.io/${{ github.repository }}:${{ github.sha }}"
-          # TODO: Ajouter les commandes de déploiement réelles
-          # ssh user@server "docker pull ghcr.io/..." ou kubectl apply
-```
-
-**IMPORTANT** : Adapte ce template en fonction de ce qui existe déjà dans le projet. Si un workflow existe mais est incomplet, complète-le plutôt que de le remplacer. Vérifie notamment :
-- La version PHP utilisée (8.2 ou 8.4 ?)
-- Les extensions PHP nécessaires (vérifie composer.json)
-- L'existence d'un fichier `phpunit.xml.dist` ou `phpunit.xml` avec les testsuites `unit` et `functional`
-- L'existence d'un `sonar-project.properties` (nécessaire pour SonarCloud)
-- L'existence d'un `Dockerfile` (nécessaire pour le stage release)
-
-## MISSION 3 : VÉRIFIER LA CONFIG PHPUnit
-
-Les testsuites `unit` et `functional` doivent exister dans `phpunit.xml.dist` :
-
-```xml
-<testsuites>
-    <testsuite name="unit">
-        <directory>tests/Unit</directory>
-    </testsuite>
-    <testsuite name="functional">
-        <directory>tests/Functional</directory>
-    </testsuite>
-</testsuites>
-```
-
-Si ce n'est pas le cas, corrige le fichier.
-
-## MISSION 4 : VÉRIFIER LES FICHIERS NÉCESSAIRES
-
-Vérifie que ces fichiers existent et sont corrects :
+### 1.1 Vérifier que l'environnement tourne
 
 ```bash
-# SonarCloud
-cat sonar-project.properties 2>/dev/null
-# Doit contenir : sonar.organization, sonar.projectKey, sonar.sources, sonar.tests
+# Vérifier le cluster K8s Kind
+kubectl get pods -n lpmde-sandbox
 
-# Dockerfile
-cat Dockerfile 2>/dev/null
-# Doit exister pour le stage release
+# Vérifier que les 3 services sont Running
+# Attendu : postgres, rabbitmq, keycloak tous en Running
 
-# docker-compose
-cat docker-compose.yml 2>/dev/null
+# Vérifier que l'app Symfony tourne
+curl -s -o /dev/null -w "HTTP %{http_code} - Total: %{time_total}s\n" http://localhost:8080/
+# ou http://localhost:8000/ selon ta config
 ```
 
-Si `sonar-project.properties` n'existe pas, crée-le avec les valeurs adaptées au projet.
+**Trouve le bon port** de l'app Symfony (8080 ou 8000) et utilise-le pour toute la suite.
 
-## MISSION 5 : PUSH ET VÉRIFIER
+### 1.2 Test expérimentation RabbitMQ (pub/sub)
+
+On doit prouver que le cycle publication/consommation fonctionne :
 
 ```bash
-git add .github/workflows/ci.yml
-git commit -m "add: mise en place du pipeline CI/CD GitHub Actions"
-git push origin main  # ou develop, selon ta branche
+# 1. Vérifier que RabbitMQ est accessible
+kubectl port-forward -n lpmde-sandbox svc/rabbitmq 5672:5672 15672:15672 &
+sleep 3
+
+# 2. Vérifier l'interface de management RabbitMQ
+curl -s -o /dev/null -w "RabbitMQ Management: HTTP %{http_code}\n" http://localhost:15672/
+
+# 3. Publier un message via Symfony Messenger
+# Cherche la commande qui dispatch un message (GhostAlert ou TrocCreatedNotification)
+php bin/console list | grep dispatch
+# OU
+docker exec <container_name> php bin/console app:dispatch:ghost-alert 2>&1
+# OU si l'app tourne en local :
+php bin/console app:dispatch:ghost-alert 2>&1
+
+# 4. Vérifier la queue RabbitMQ (via API management)
+curl -s -u guest:guest http://localhost:15672/api/queues/%2f/ | python -c "
+import sys,json
+queues = json.load(sys.stdin)
+for q in queues:
+    print(f\"Queue: {q['name']} | Messages: {q.get('messages',0)} | Consumers: {q.get('consumers',0)}\")"
+
+# 5. Consommer le message
+docker exec <container_name> php bin/console messenger:consume async --limit=1 -vv 2>&1
+# OU en local :
+php bin/console messenger:consume async --limit=1 -vv 2>&1
+
+# 6. Re-vérifier la queue (doit être vide)
+curl -s -u guest:guest http://localhost:15672/api/queues/%2f/ | python -c "
+import sys,json
+queues = json.load(sys.stdin)
+for q in queues:
+    print(f\"Queue: {q['name']} | Messages: {q.get('messages',0)} | Status: {'VIDE ✅' if q.get('messages',0)==0 else 'NON VIDE ⚠️'}\")"
 ```
 
-Après le push, dis-moi :
-- L'URL du repo GitHub (pour que j'aille vérifier les Actions)
-- Le résultat du `git push`
+**Capture tous les résultats** dans un fichier `RABBITMQ_TEST_RESULTS.txt`.
+
+### 1.3 Test expérimentation Keycloak (OAuth2/OIDC)
+
+```bash
+# 1. Exposer Keycloak si pas déjà fait
+kubectl port-forward -n lpmde-sandbox svc/keycloak 8080:8080 &
+sleep 5
+
+# 2. Test OIDC Discovery
+curl -s -w "\n--- Temps: %{time_total}s ---" \
+  "http://localhost:8080/realms/symfony-app/.well-known/openid-configuration" \
+  | python -c "import sys,json; d=json.loads(sys.stdin.read().split('---')[0]); print('issuer:', d['issuer']); print('token_endpoint:', d['token_endpoint'])"
+
+# 3. Obtenir un token JWT
+TOKEN_RESPONSE=$(curl -s -w "\n--- Temps: %{time_total}s ---" \
+  -X POST "http://localhost:8080/realms/symfony-app/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=symfony-app&client_secret=7g4hUZzxEbpEegkTA4v1L8w3RICCbe1x&username=testuser&password=password&grant_type=password&scope=openid profile email")
+echo "$TOKEN_RESPONSE"
+
+# 4. Extraire le token
+ACCESS_TOKEN=$(echo "$TOKEN_RESPONSE" | head -1 | python -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+
+# 5. Test userinfo avec le token
+curl -s -w "\n--- Temps: %{time_total}s ---" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  "http://localhost:8080/realms/symfony-app/protocol/openid-connect/userinfo"
+
+# 6. Décoder le JWT
+echo "$ACCESS_TOKEN" | cut -d'.' -f2 | tr '_-' '/+' \
+  | awk '{n=length($0)%4; if(n==2)print $0"=="; else if(n==3)print $0"="; else print $0}' \
+  | base64 -d 2>/dev/null | python -c "
+import sys,json; c=json.load(sys.stdin)
+print('sub:', c.get('sub'))
+print('username:', c.get('preferred_username'))
+print('email:', c.get('email'))
+print('issuer:', c.get('iss'))
+print('roles:', c.get('realm_access',{}).get('roles',[]))"
+```
+
+**Capture tous les résultats** dans un fichier `KEYCLOAK_TEST_RESULTS.txt`.
+
+---
+
+## PARTIE 2 — TESTS DE CHARGE SIEGE
+
+### 2.1 Installer Siege si nécessaire
+
+```bash
+# Vérifier si siege est installé
+which siege || siege --version
+
+# Si pas installé :
+# Sur Ubuntu/WSL : sudo apt-get install siege -y
+# Sur Mac : brew install siege
+# Sur Windows : utiliser WSL ou installer via chocolatey
+```
+
+Si Siege n'est pas installable, utilise `ab` (Apache Benchmark) comme alternative :
+```bash
+which ab  # souvent préinstallé
+```
+
+### 2.2 Préparer l'app (IMPORTANT)
+
+```bash
+# Charger les fixtures si pas déjà fait
+php bin/console doctrine:fixtures:load --no-interaction 2>/dev/null \
+  || docker exec <container> php bin/console doctrine:fixtures:load --no-interaction
+
+# Faire un premier appel pour chauffer le cache Symfony (le premier est toujours lent)
+curl -s -o /dev/null -w "Warm-up: %{time_total}s\n" http://localhost:8080/troc
+curl -s -o /dev/null -w "Warm-up 2: %{time_total}s\n" http://localhost:8080/troc
+# Le 2ème appel devrait être beaucoup plus rapide que le 1er
+```
+
+### 2.3 Lancer les tests Siege
+
+**Adapte le port (8080 ou 8000) et l'URL selon ta config.**
+
+```bash
+echo "=== Test de charge Siege — $(date) ===" > SIEGE_RESULTS.txt
+
+echo -e "\n--- 10 utilisateurs concurrents ---" >> SIEGE_RESULTS.txt
+siege -c 10 -t 30S -b http://localhost:8080/troc 2>&1 | tee -a SIEGE_RESULTS.txt
+
+echo -e "\n--- 25 utilisateurs concurrents ---" >> SIEGE_RESULTS.txt
+siege -c 25 -t 30S -b http://localhost:8080/troc 2>&1 | tee -a SIEGE_RESULTS.txt
+
+echo -e "\n--- 50 utilisateurs concurrents ---" >> SIEGE_RESULTS.txt
+siege -c 50 -t 30S -b http://localhost:8080/troc 2>&1 | tee -a SIEGE_RESULTS.txt
+
+echo -e "\n--- 100 utilisateurs concurrents ---" >> SIEGE_RESULTS.txt
+siege -c 100 -t 30S -b http://localhost:8080/troc 2>&1 | tee -a SIEGE_RESULTS.txt
+```
+
+**Si Siege n'est pas dispo, utilise ab (Apache Benchmark) :**
+```bash
+ab -n 300 -c 10 http://localhost:8080/troc/ > ab_10users.txt 2>&1
+ab -n 750 -c 25 http://localhost:8080/troc/ > ab_25users.txt 2>&1
+ab -n 1500 -c 50 http://localhost:8080/troc/ > ab_50users.txt 2>&1
+ab -n 3000 -c 100 http://localhost:8080/troc/ > ab_100users.txt 2>&1
+```
+
+### 2.4 Créer le résumé
+
+Après les tests, crée ou mets à jour `SIEGE_RESULTS.md` avec un tableau récapitulatif :
+
+```markdown
+# Résultats tests de charge
+
+**Date :** [date]
+**Environnement :** Docker Desktop + Symfony 6.4 (mode dev)
+**Endpoint testé :** GET /troc (liste des annonces, 13 fixtures)
+
+| Utilisateurs | Transactions | Trans/sec | Temps moyen | Disponibilité | Plus long |
+|---|---|---|---|---|---|
+| 10 | ... | ... | ... | ... | ... |
+| 25 | ... | ... | ... | ... | ... |
+| 50 | ... | ... | ... | ... | ... |
+| 100 | ... | ... | ... | ... | ... |
+
+**Analyse :**
+- [Commenter les résultats : le P95 reste-t-il < 300ms ?]
+- [La disponibilité reste-t-elle > 99% ?]
+- [À quel nombre d'utilisateurs commence-t-on à voir des dégradations ?]
+
+**Note :** Tests effectués en environnement de développement (Docker Desktop, mode dev Symfony avec profiler). En production (mode prod, opcache, multi-réplicas K8s), les performances seraient significativement meilleures.
+```
+
+---
+
+## PARTIE 3 — SCANS DE SÉCURITÉ
+
+### 3.1 Trivy filesystem
+
+```bash
+# Vérifier si trivy est installé
+which trivy || trivy --version
+
+# Si pas installé, utilise l'image Docker :
+docker run --rm -v $(pwd):/app aquasecurity/trivy:latest fs /app --severity HIGH,CRITICAL --format table 2>&1 | tee trivy_fs_results.txt
+
+# Ou si trivy est installé :
+trivy fs . --severity HIGH,CRITICAL --format table 2>&1 | tee trivy_fs_results.txt
+```
+
+### 3.2 Trivy image Docker (si possible)
+
+```bash
+# Trouver le nom de l'image Docker de l'app
+docker images | grep -i lpmde
+docker images | grep -i petite
+
+# Scanner l'image
+trivy image <NOM_IMAGE>:latest --severity HIGH,CRITICAL --format table 2>&1 | tee trivy_image_results.txt
+```
+
+### 3.3 PHPUnit (vérifier que tous les tests passent toujours)
+
+```bash
+php bin/phpunit 2>&1 | tee phpunit_results.txt
+# OU
+docker exec <container> php bin/phpunit 2>&1 | tee phpunit_results.txt
+```
+
+---
+
+## PARTIE 4 — COMMIT DES RÉSULTATS
+
+```bash
+# Vérifier l'identité Git
+git config user.name  # doit être MON nom
+
+# Ajouter les résultats
+git add SIEGE_RESULTS.md SIEGE_RESULTS.txt RABBITMQ_TEST_RESULTS.txt KEYCLOAK_TEST_RESULTS.txt trivy_*.txt phpunit_results.txt 2>/dev/null
+git commit -m "add: ajout des résultats de tests (charge, expérimentation, sécurité)"
+git push
+```
+
+---
+
+## ORDRE DE PRIORITÉ
+
+1. **Partie 1** — Validation expérimentation (RabbitMQ + Keycloak) — prouve que le bac à sable marche
+2. **Partie 2** — Tests de charge Siege — nécessaire pour la démo et la Phase 3
+3. **Partie 3** — Scans Trivy + PHPUnit — confirme l'état sécurité actuel
+4. **Partie 4** — Commit tout
 
 ## RÈGLES
-- Commits en français : `add:`, `fix:`, `config:`
-- Vérifie `git config user.name` avant chaque commit
-- Si SonarCloud n'est pas configuré (pas de SONAR_TOKEN dans les secrets GitHub), mets le job `sonar-audit` en `continue-on-error: true`
-- Le stage `deploy-staging-job` peut rester en "echo" pour le moment — les consignes disent qu'on n'est pas pénalisé si le déploiement ne fonctionne pas dans le pipeline
+- **Adapte les commandes** au setup réel (port 8080 ou 8000, nom du container Docker, etc.)
+- **Capture TOUT** dans des fichiers texte — on en aura besoin pour les slides
+- Si Siege n'est pas installable → utilise `ab` (Apache Benchmark) ou même `curl` en boucle
+- Si un test échoue, **documente l'échec** — c'est valorisé dans le rapport d'expérimentation
+- Commits en français : `add:`, `test:`, `fix:`
