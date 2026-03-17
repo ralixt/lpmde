@@ -46,10 +46,16 @@
         <div class="flex justify-between items-center mb-6">
             <p class="text-slate-400 text-sm">{{ annonces|length }} annonce{{ annonces|length > 1 ? 's' : '' }} </p>
             {% if app.session.get('is_authenticated') %}
-                <a href="{{ path('troc_new') }}"
-                   class="bg-primary hover:bg-red-700 text-white px-5 py-2 rounded font-medium transition-colors">
-                    + Publier une annonce
-                </a>
+                <div class="flex gap-3">
+                    <a href="{{ path('troc_mes_annonces') }}"
+                       class="border border-slate-600 hover:border-primary text-slate-300 px-5 py-2 rounded font-medium transition-colors">
+                        Mes annonces
+                    </a>
+                    <a href="{{ path('troc_new') }}"
+                       class="bg-primary hover:bg-red-700 text-white px-5 py-2 rounded font-medium transition-colors">
+                        + Publier une annonce
+                    </a>
+                </div>
             {% else %}
                 <a href="{{ path('app_login_keycloak') }}"
                    class="bg-surface-dark border border-slate-600 hover:border-primary text-slate-300 px-5 py-2 rounded font-medium transition-colors">
