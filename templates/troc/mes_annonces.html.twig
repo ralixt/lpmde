@@ -3,18 +3,27 @@
 {% block title %}Mes annonces{% endblock %}
 
 {% block body %}
-<div class="min-h-screen bg-background-dark py-8 px-4">
-    <div class="max-w-5xl mx-auto">
+<div class="min-h-screen bg-background-dark py-12 px-4">
+    <div class="max-w-[1200px] mx-auto">
 
-        <div class="flex justify-between items-center mb-8">
+        <div class="mb-10 flex items-end justify-between gap-6">
             <div>
-                <h1 class="text-3xl font-bold text-white font-display">Mes annonces</h1>
-                <p class="text-slate-400 mt-1">{{ annonces|length }} annonce{{ annonces|length > 1 ? 's' : '' }} publiée{{ annonces|length > 1 ? 's' : '' }}</p>
+                <span class="inline-block px-3 py-1 bg-primary/20 text-primary border border-primary/30 text-[10px] font-bold uppercase tracking-widest rounded mb-4">Mon compte</span>
+                <h1 class="text-5xl font-black uppercase tracking-tighter text-white leading-none">Mes annonces</h1>
+                <p class="text-slate-500 text-sm mt-2 uppercase tracking-widest">{{ annonces|length }} annonce{{ annonces|length > 1 ? 's' : '' }} publiée{{ annonces|length > 1 ? 's' : '' }}</p>
             </div>
-            <a href="{{ path('troc_new') }}"
-               class="bg-primary hover:bg-red-700 text-white px-5 py-2 rounded font-medium transition-colors">
-                + Nouvelle annonce
-            </a>
+            <div class="flex gap-3 shrink-0">
+                <a href="{{ path('troc_index') }}"
+                   class="flex items-center gap-2 border border-slate-700 hover:border-primary text-slate-300 px-5 py-2 rounded font-bold transition-colors text-xs uppercase tracking-widest">
+                    <span class="material-symbols-outlined text-base">arrow_back</span>
+                    Toutes les annonces
+                </a>
+                <a href="{{ path('troc_new') }}"
+                   class="flex items-center gap-2 bg-primary hover:bg-red-700 text-white px-5 py-2 rounded font-bold transition-colors text-xs uppercase tracking-widest">
+                    <span class="material-symbols-outlined text-base">add</span>
+                    Nouvelle annonce
+                </a>
+            </div>
         </div>
 
         {% for type, messages in app.flashes %}
@@ -29,38 +38,43 @@
         {% endfor %}
 
         {% if annonces is empty %}
-            <div class="text-center py-20 text-slate-500 bg-surface-dark rounded-xl border border-slate-800">
-                <p class="text-6xl mb-4">📭</p>
-                <p class="text-xl text-slate-400">Vous n'avez pas encore d'annonces.</p>
-                <a href="{{ path('troc_new') }}" class="mt-4 inline-block text-primary hover:underline">
-                    Publiez votre première annonce →
+            <div class="text-center py-24 bg-surface-dark rounded-2xl border border-white/5">
+                <span class="material-symbols-outlined text-7xl text-slate-700 block mb-4">inbox</span>
+                <p class="text-xl font-black uppercase tracking-tighter text-slate-400">Vous n'avez pas encore d'annonces</p>
+                <a href="{{ path('troc_new') }}" class="mt-4 inline-flex items-center gap-2 text-primary hover:underline text-xs font-bold uppercase tracking-widest">
+                    <span class="material-symbols-outlined text-base">add</span>
+                    Publier ma première annonce
                 </a>
             </div>
         {% else %}
             <div class="space-y-4">
                 {% for annonce in annonces %}
-                    <div class="bg-surface-dark rounded-xl border border-slate-800 p-6 flex items-center justify-between gap-4">
+                    <div class="bg-surface-dark rounded-xl border border-white/5 hover:border-white/10 p-5 flex items-center justify-between gap-4 transition-colors group">
                         <div class="flex items-center gap-4 min-w-0">
-                            <div class="text-3xl flex-shrink-0">
-                                {% if annonce.category == 'Figurines' %}🗿
-                                {% elseif annonce.category == 'Films' %}🎬
-                                {% elseif annonce.category == 'Jeux' %}🎲
-                                {% elseif annonce.category == 'Fanzines' %}📰
-                                {% else %}📚{% endif %}
+                            <div class="w-12 h-12 bg-slate-900/60 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-2xl text-slate-600 group-hover:text-primary transition-colors">
+                                    {% if annonce.category == 'Figurines' %}monument
+                                    {% elseif annonce.category == 'Films' %}movie
+                                    {% elseif annonce.category == 'Jeux' %}casino
+                                    {% elseif annonce.category == 'Fanzines' %}newspaper
+                                    {% else %}menu_book{% endif %}
+                                </span>
                             </div>
                             <div class="min-w-0">
-                                <h3 class="text-white font-semibold truncate">{{ annonce.title }}</h3>
-                                <div class="flex gap-2 mt-1 flex-wrap">
-                                    <span class="text-xs px-2 py-0.5 rounded
-                                        {% if annonce.type == 'exchange' %}bg-blue-900/50 text-blue-300{% else %}bg-green-900/50 text-green-300{% endif %}">
-                                        {% if annonce.type == 'exchange' %}⇄ Échange{% else %}🎁 Don{% endif %}
+                                <h3 class="text-white font-bold truncate group-hover:text-primary transition-colors">{{ annonce.title }}</h3>
+                                <div class="flex gap-2 mt-1.5 flex-wrap items-center">
+                                    <span class="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-widest
+                                        {% if annonce.type == 'exchange' %}bg-blue-900/40 text-blue-300{% else %}bg-green-900/40 text-green-300{% endif %}">
+                                        <span class="material-symbols-outlined" style="font-size:11px">{% if annonce.type == 'exchange' %}swap_horiz{% else %}card_giftcard{% endif %}</span>
+                                        {% if annonce.type == 'exchange' %}Échange{% else %}Don{% endif %}
                                     </span>
-                                    <span class="text-xs text-slate-400">{{ annonce.category }}</span>
-                                    <span class="text-xs text-slate-500">{{ annonce.createdAt|date('d/m/Y') }}</span>
-                                    <span class="text-xs px-2 py-0.5 rounded
-                                        {% if annonce.status == 'active' %}bg-green-900/50 text-green-400
-                                        {% elseif annonce.status == 'closed' %}bg-slate-700 text-slate-400
-                                        {% else %}bg-yellow-900/50 text-yellow-400{% endif %}">
+                                    <span class="text-[10px] text-slate-500 uppercase tracking-widest">{{ annonce.category }}</span>
+                                    <span class="text-[10px] text-slate-600">{{ annonce.createdAt|date('d/m/Y') }}</span>
+                                    <span class="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-widest
+                                        {% if annonce.status == 'active' %}bg-green-900/40 text-green-400
+                                        {% elseif annonce.status == 'closed' %}bg-slate-700/60 text-slate-400
+                                        {% else %}bg-yellow-900/40 text-yellow-400{% endif %}">
+                                        <span class="material-symbols-outlined" style="font-size:11px">{% if annonce.status == 'active' %}check_circle{% elseif annonce.status == 'closed' %}cancel{% else %}pending{% endif %}</span>
                                         {{ annonce.status }}
                                     </span>
                                 </div>
@@ -69,17 +83,20 @@
 
                         <div class="flex gap-2 flex-shrink-0">
                             <a href="{{ path('troc_show', {id: annonce.id}) }}"
-                               class="px-3 py-1.5 text-sm bg-slate-700 hover:bg-slate-600 text-white rounded transition-colors">
+                               class="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg transition-colors">
+                                <span class="material-symbols-outlined text-sm">visibility</span>
                                 Voir
                             </a>
                             <a href="{{ path('troc_edit', {id: annonce.id}) }}"
-                               class="px-3 py-1.5 text-sm bg-slate-700 hover:bg-slate-600 text-white rounded transition-colors">
+                               class="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg transition-colors">
+                                <span class="material-symbols-outlined text-sm">edit</span>
                                 Modifier
                             </a>
                             <form method="post" action="{{ path('troc_delete', {id: annonce.id}) }}"
                                   onsubmit="return confirm('Supprimer cette annonce ?')">
                                 <button type="submit"
-                                        class="px-3 py-1.5 text-sm bg-primary/20 hover:bg-primary text-red-400 hover:text-white rounded transition-colors">
+                                        class="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-primary/10 hover:bg-primary border border-primary/20 hover:border-primary text-red-400 hover:text-white rounded-lg transition-colors">
+                                    <span class="material-symbols-outlined text-sm">delete</span>
                                     Supprimer
                                 </button>
                             </form>
