@@ -1,12 +1,12 @@
 <header class="sticky top-0 z-50 glass-nav border-b border-white/10">
     <div class="max-w-[1500px] mx-auto px-4 lg:px-10 h-20 flex items-center justify-between gap-8">
         <!-- Logo Area -->
-        <div class="flex items-center gap-3 shrink-0">
+        <a href="{{ path('homepage') }}" class="flex items-center gap-3 shrink-0">
             <div class="text-primary">
                 <img src="{{ asset('img/logo.png') }}" class="logo-site" alt="">
             </div>
             <h1 class="text-xl font-bold tracking-tight uppercase hidden md:block text-white">La Petite Maison de l'épouvante</h1>
-        </div>
+        </a>
         <!-- Main Nav Links -->
         <nav class="hidden lg:flex items-center gap-8 uppercase text-xs font-semibold tracking-widest text-slate-400">
             <a class="hover:text-primary transition-colors" href="#">Cinema</a>
