@@ -10,17 +10,17 @@
             <div>
                 <span class="inline-block px-3 py-1 bg-primary/20 text-primary border border-primary/30 text-[10px] font-bold uppercase tracking-widest rounded mb-4">Mon compte</span>
                 <h1 class="text-5xl font-black uppercase tracking-tighter text-white leading-none">Mes annonces</h1>
-                <p class="text-slate-500 text-sm mt-2 uppercase tracking-widest">{{ annonces|length }} annonce{{ annonces|length > 1 ? 's' : '' }} publiée{{ annonces|length > 1 ? 's' : '' }}</p>
+                <p class="text-slate-500 text-sm mt-2 uppercase tracking-widest" aria-live="polite">{{ annonces|length }} annonce{{ annonces|length > 1 ? 's' : '' }} publiée{{ annonces|length > 1 ? 's' : '' }}</p>
             </div>
             <div class="flex gap-3 shrink-0">
                 <a href="{{ path('troc_index') }}"
                    class="flex items-center gap-2 border border-slate-700 hover:border-primary text-slate-300 px-5 py-2 rounded font-bold transition-colors text-xs uppercase tracking-widest">
-                    <span class="material-symbols-outlined text-base">arrow_back</span>
+                    <span class="material-symbols-outlined text-base" aria-hidden="true">arrow_back</span>
                     Toutes les annonces
                 </a>
                 <a href="{{ path('troc_new') }}"
                    class="flex items-center gap-2 bg-primary hover:bg-red-700 text-white px-5 py-2 rounded font-bold transition-colors text-xs uppercase tracking-widest">
-                    <span class="material-symbols-outlined text-base">add</span>
+                    <span class="material-symbols-outlined text-base" aria-hidden="true">add</span>
                     Nouvelle annonce
                 </a>
             </div>
@@ -28,7 +28,8 @@
 
         {% for type, messages in app.flashes %}
             {% for message in messages %}
-                <div class="mb-4 p-4 rounded border
+                <div role="{{ type == 'error' ? 'alert' : 'status' }}"
+                     class="mb-4 p-4 rounded border
                     {% if type == 'success' %}bg-green-900/50 border-green-700 text-green-300
                     {% elseif type == 'error' %}bg-red-900/50 border-primary text-red-300
                     {% else %}bg-slate-800 border-slate-600 text-slate-300{% endif %}">
@@ -39,20 +40,20 @@
 
         {% if annonces is empty %}
             <div class="text-center py-24 bg-surface-dark rounded-2xl border border-white/5">
-                <span class="material-symbols-outlined text-7xl text-slate-700 block mb-4">inbox</span>
+                <span class="material-symbols-outlined text-7xl text-slate-700 block mb-4" aria-hidden="true">inbox</span>
                 <p class="text-xl font-black uppercase tracking-tighter text-slate-400">Vous n'avez pas encore d'annonces</p>
                 <a href="{{ path('troc_new') }}" class="mt-4 inline-flex items-center gap-2 text-primary hover:underline text-xs font-bold uppercase tracking-widest">
-                    <span class="material-symbols-outlined text-base">add</span>
+                    <span class="material-symbols-outlined text-base" aria-hidden="true">add</span>
                     Publier ma première annonce
                 </a>
             </div>
         {% else %}
-            <div class="space-y-4">
+            <ul class="space-y-4 list-none p-0">
                 {% for annonce in annonces %}
-                    <div class="bg-surface-dark rounded-xl border border-white/5 hover:border-white/10 p-5 flex items-center justify-between gap-4 transition-colors group">
+                    <li class="bg-surface-dark rounded-xl border border-white/5 hover:border-white/10 p-5 flex items-center justify-between gap-4 transition-colors group">
                         <div class="flex items-center gap-4 min-w-0">
-                            <div class="w-12 h-12 bg-slate-900/60 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <span class="material-symbols-outlined text-2xl text-slate-600 group-hover:text-primary transition-colors">
+                            <div class="w-12 h-12 bg-slate-900/60 rounded-lg flex items-center justify-center flex-shrink-0" aria-hidden="true">
+                                <span class="material-symbols-outlined text-2xl text-slate-600 group-hover:text-primary transition-colors" aria-hidden="true">
                                     {% if annonce.category == 'Figurines' %}monument
                                     {% elseif annonce.category == 'Films' %}movie
                                     {% elseif annonce.category == 'Jeux' %}casino
@@ -61,20 +62,20 @@
                                 </span>
                             </div>
                             <div class="min-w-0">
-                                <h3 class="text-white font-bold truncate group-hover:text-primary transition-colors">{{ annonce.title }}</h3>
-                                <div class="flex gap-2 mt-1.5 flex-wrap items-center">
+                                <h2 class="text-white font-bold truncate group-hover:text-primary transition-colors">{{ annonce.title }}</h2>
+                                <div class="flex gap-2 mt-1.5 flex-wrap items-center" aria-hidden="true">
                                     <span class="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-widest
                                         {% if annonce.type == 'exchange' %}bg-blue-900/40 text-blue-300{% else %}bg-green-900/40 text-green-300{% endif %}">
-                                        <span class="material-symbols-outlined" style="font-size:11px">{% if annonce.type == 'exchange' %}swap_horiz{% else %}card_giftcard{% endif %}</span>
+                                        <span class="material-symbols-outlined" style="font-size:11px" aria-hidden="true">{% if annonce.type == 'exchange' %}swap_horiz{% else %}card_giftcard{% endif %}</span>
                                         {% if annonce.type == 'exchange' %}Échange{% else %}Don{% endif %}
                                     </span>
                                     <span class="text-[10px] text-slate-500 uppercase tracking-widest">{{ annonce.category }}</span>
-                                    <span class="text-[10px] text-slate-600">{{ annonce.createdAt|date('d/m/Y') }}</span>
+                                    <time class="text-[10px] text-slate-600" datetime="{{ annonce.createdAt|date('Y-m-d') }}">{{ annonce.createdAt|date('d/m/Y') }}</time>
                                     <span class="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-widest
                                         {% if annonce.status == 'active' %}bg-green-900/40 text-green-400
                                         {% elseif annonce.status == 'closed' %}bg-slate-700/60 text-slate-400
                                         {% else %}bg-yellow-900/40 text-yellow-400{% endif %}">
-                                        <span class="material-symbols-outlined" style="font-size:11px">{% if annonce.status == 'active' %}check_circle{% elseif annonce.status == 'closed' %}cancel{% else %}pending{% endif %}</span>
+                                        <span class="material-symbols-outlined" style="font-size:11px" aria-hidden="true">{% if annonce.status == 'active' %}check_circle{% elseif annonce.status == 'closed' %}cancel{% else %}pending{% endif %}</span>
                                         {{ annonce.status }}
                                     </span>
                                 </div>
@@ -84,26 +85,27 @@
                         <div class="flex gap-2 flex-shrink-0">
                             <a href="{{ path('troc_show', {id: annonce.id}) }}"
                                class="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg transition-colors">
-                                <span class="material-symbols-outlined text-sm">visibility</span>
+                                <span class="material-symbols-outlined text-sm" aria-hidden="true">visibility</span>
                                 Voir
                             </a>
                             <a href="{{ path('troc_edit', {id: annonce.id}) }}"
                                class="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg transition-colors">
-                                <span class="material-symbols-outlined text-sm">edit</span>
+                                <span class="material-symbols-outlined text-sm" aria-hidden="true">edit</span>
                                 Modifier
                             </a>
                             <form method="post" action="{{ path('troc_delete', {id: annonce.id}) }}"
                                   onsubmit="return confirm('Supprimer cette annonce ?')">
                                 <button type="submit"
-                                        class="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-primary/10 hover:bg-primary border border-primary/20 hover:border-primary text-red-400 hover:text-white rounded-lg transition-colors">
-                                    <span class="material-symbols-outlined text-sm">delete</span>
+                                        class="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-primary/10 hover:bg-primary border border-primary/20 hover:border-primary text-red-400 hover:text-white rounded-lg transition-colors"
+                                        aria-label="Supprimer l'annonce {{ annonce.title }}">
+                                    <span class="material-symbols-outlined text-sm" aria-hidden="true">delete</span>
                                     Supprimer
                                 </button>
                             </form>
                         </div>
-                    </div>
+                    </li>
                 {% endfor %}
-            </div>
+            </ul>
         {% endif %}
 
     </div>

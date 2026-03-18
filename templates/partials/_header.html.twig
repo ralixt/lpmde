@@ -3,12 +3,12 @@
         <!-- Logo Area -->
         <a href="{{ path('homepage') }}" class="flex items-center gap-3 shrink-0">
             <div class="text-primary">
-                <img src="{{ asset('img/logo.png') }}" class="logo-site" alt="">
+                <img src="{{ asset('img/logo.png') }}" class="logo-site" alt="La Petite Maison de l'Épouvante — Accueil">
             </div>
-            <h1 class="text-xl font-bold tracking-tight uppercase hidden md:block text-white">La Petite Maison de l'épouvante</h1>
+            <span class="text-xl font-bold tracking-tight uppercase hidden md:block text-white" aria-hidden="true">La Petite Maison de l'épouvante</span>
         </a>
         <!-- Main Nav Links -->
-        <nav class="hidden lg:flex items-center gap-8 uppercase text-xs font-semibold tracking-widest text-slate-400">
+        <nav aria-label="Navigation principale" class="hidden lg:flex items-center gap-8 uppercase text-xs font-semibold tracking-widest text-slate-400">
             <a class="hover:text-primary transition-colors" href="#">Cinema</a>
             <a class="hover:text-primary transition-colors" href="#">Figurines</a>
             <a class="hover:text-primary transition-colors" href="#">Games</a>
@@ -18,43 +18,53 @@
         <!-- Search and Icons -->
         <div class="flex items-center gap-4 flex-1 justify-end">
             <div class="relative max-w-xs w-full hidden sm:block">
-                <span
-                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 scale-90">search</span>
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 scale-90" aria-hidden="true">search</span>
+                <label for="header-search" class="sr-only">Rechercher dans la crypte</label>
                 <input
+                    id="header-search"
                     class="w-full bg-white/5 border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-primary focus:border-primary"
-                    placeholder="Search the crypt..." type="text" />
+                    placeholder="Search the crypt..." type="search" />
             </div>
-            <button class="p-2 hover:bg-white/5 rounded-full relative">
-                <span class="text-white material-symbols-outlined">shopping_cart</span>
-                <span
-                    class="absolute top-1 right-1 bg-primary text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">3</span>
+            <button class="p-2 hover:bg-white/5 rounded-full relative" aria-label="Panier (3 articles)">
+                <span class="material-symbols-outlined text-white" aria-hidden="true">shopping_cart</span>
+                <span class="absolute top-1 right-1 bg-primary text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold" aria-hidden="true">3</span>
             </button>
 
             <!-- User Auth Section -->
             {% if app.session.get('is_authenticated') %}
                 <!-- User Menu (Connected) -->
                 <div class="relative group">
-                    <button class="flex items-center gap-2 px-4 py-2 bg-primary/20 hover:bg-primary border border-primary/40 rounded-lg transition-all">
-                        <span class="text-white material-symbols-outlined">account_circle</span>
+                    <button
+                        id="user-menu-button"
+                        class="flex items-center gap-2 px-4 py-2 bg-primary/20 hover:bg-primary border border-primary/40 rounded-lg transition-all"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        aria-controls="user-menu"
+                        onclick="this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true')">
+                        <span class="material-symbols-outlined text-white" aria-hidden="true">account_circle</span>
                         <span class="text-white text-sm font-semibold hidden md:block">{{ app.session.get('user_name') }}</span>
                     </button>
                     <!-- Dropdown -->
-                    <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div
+                        id="user-menu"
+                        role="menu"
+                        aria-labelledby="user-menu-button"
+                        class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                         <div class="p-3 border-b border-gray-200">
                             <p class="text-sm font-semibold text-gray-900">{{ app.session.get('user_name') }}</p>
                             <p class="text-xs text-gray-600">{{ app.session.get('user_email') }}</p>
                         </div>
                         <div class="py-2">
-                            <a href="{{ path('app_profile') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-primary/10 hover:text-primary transition-colors">
-                                <span class="material-symbols-outlined text-lg">person</span>
+                            <a href="{{ path('app_profile') }}" role="menuitem" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-primary/10 hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-lg" aria-hidden="true">person</span>
                                 Mon Profil
                             </a>
-                            <a href="{{ path('troc_mes_annonces') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-primary/10 hover:text-primary transition-colors">
-                                <span class="material-symbols-outlined text-lg">swap_calls</span>
+                            <a href="{{ path('troc_mes_annonces') }}" role="menuitem" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-primary/10 hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-lg" aria-hidden="true">swap_calls</span>
                                 Mes annonces
                             </a>
-                            <a href="{{ path('app_logout') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                <span class="material-symbols-outlined text-lg">logout</span>
+                            <a href="{{ path('app_logout') }}" role="menuitem" class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                <span class="material-symbols-outlined text-lg" aria-hidden="true">logout</span>
                                 Déconnexion
                             </a>
                         </div>
@@ -63,7 +73,7 @@
             {% else %}
                 <!-- Login Button (Not Connected) -->
                 <a href="{{ path('app_login_keycloak') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all">
-                    <span class="text-white material-symbols-outlined">login</span>
+                    <span class="material-symbols-outlined text-white" aria-hidden="true">login</span>
                     <span class="text-white text-sm font-semibold hidden md:block">Connexion</span>
                 </a>
             {% endif %}

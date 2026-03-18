@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
     <head>
         <meta charset="UTF-8">
         <title>La petite maison de l'épouvante - {% block title %}{% endblock %}</title>
@@ -51,8 +51,11 @@
 
     </head>
     <body class="bg-background-dark text-slate-900 dark:text-white min-h-screen">
+        <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-primary focus:text-white focus:px-4 focus:py-2 focus:rounded focus:font-bold focus:text-sm">Aller au contenu principal</a>
         {% include 'partials/_header.html.twig' %}
+        <main id="main-content">
         {% block body %}{% endblock %}
+        </main>
 
         {% block javascripts %}
             {% block importmap %}{{ importmap('app') }}{% endblock %}

@@ -18,19 +18,19 @@
                     <div class="flex gap-3 shrink-0">
                         <a href="{{ path('troc_mes_annonces') }}"
                            class="flex items-center gap-2 border border-slate-700 hover:border-primary text-slate-300 px-5 py-2 rounded font-bold transition-colors text-xs uppercase tracking-widest">
-                            <span class="material-symbols-outlined text-base">list_alt</span>
+                            <span class="material-symbols-outlined text-base" aria-hidden="true">list_alt</span>
                             Mes annonces
                         </a>
                         <a href="{{ path('troc_new') }}"
                            class="flex items-center gap-2 bg-primary hover:bg-red-700 text-white px-5 py-2 rounded font-bold transition-colors text-xs uppercase tracking-widest">
-                            <span class="material-symbols-outlined text-base">add</span>
+                            <span class="material-symbols-outlined text-base" aria-hidden="true">add</span>
                             Publier
                         </a>
                     </div>
                 {% else %}
                     <a href="{{ path('app_login_keycloak') }}"
                        class="flex items-center gap-2 border border-slate-700 hover:border-primary text-slate-300 px-5 py-2 rounded font-bold transition-colors text-xs uppercase tracking-widest shrink-0">
-                        <span class="material-symbols-outlined text-base">login</span>
+                        <span class="material-symbols-outlined text-base" aria-hidden="true">login</span>
                         Connexion pour publier
                     </a>
                 {% endif %}
@@ -40,7 +40,8 @@
         {# Flash messages #}
         {% for type, messages in app.flashes %}
             {% for message in messages %}
-                <div class="mb-4 p-4 rounded border
+                <div role="{{ type == 'error' ? 'alert' : 'status' }}"
+                     class="mb-4 p-4 rounded border
                     {% if type == 'success' %}bg-green-900/50 border-green-700 text-green-300
                     {% elseif type == 'error' %}bg-red-900/50 border-primary text-red-300
                     {% else %}bg-slate-800 border-slate-600 text-slate-300{% endif %}">
@@ -51,42 +52,45 @@
 
         {# Filtres + compteur #}
         <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
-            <div class="flex flex-wrap gap-2">
+            <nav aria-label="Filtres par catégorie" class="flex flex-wrap gap-2">
                 <a href="{{ path('troc_index') }}"
                    class="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors
-                          {% if not currentCategory %}bg-primary text-white{% else %}bg-surface-dark text-slate-400 border border-slate-700 hover:border-primary{% endif %}">
+                          {% if not currentCategory %}bg-primary text-white{% else %}bg-surface-dark text-slate-400 border border-slate-700 hover:border-primary{% endif %}"
+                   {% if not currentCategory %}aria-current="true"{% endif %}>
                     Tout
                 </a>
                 {% for cat in categories %}
                     <a href="{{ path('troc_index', {category: cat}) }}"
                        class="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors
-                              {% if currentCategory == cat %}bg-primary text-white{% else %}bg-surface-dark text-slate-400 border border-slate-700 hover:border-primary{% endif %}">
+                              {% if currentCategory == cat %}bg-primary text-white{% else %}bg-surface-dark text-slate-400 border border-slate-700 hover:border-primary{% endif %}"
+                       {% if currentCategory == cat %}aria-current="true"{% endif %}>
                         {{ cat }}
                     </a>
                 {% endfor %}
-            </div>
-            <p class="text-slate-600 text-xs uppercase tracking-widest">{{ annonces|length }} annonce{{ annonces|length > 1 ? 's' : '' }}</p>
+            </nav>
+            <p class="text-slate-600 text-xs uppercase tracking-widest" aria-live="polite">{{ annonces|length }} annonce{{ annonces|length > 1 ? 's' : '' }}</p>
         </div>
 
         {# Grille d'annonces #}
         {% if annonces is empty %}
             <div class="text-center py-24 bg-surface-dark rounded-2xl border border-white/5">
-                <span class="material-symbols-outlined text-7xl text-slate-700 block mb-4">swap_calls</span>
+                <span class="material-symbols-outlined text-7xl text-slate-700 block mb-4" aria-hidden="true">swap_calls</span>
                 <p class="text-xl font-black uppercase tracking-tighter text-slate-400">Aucune annonce pour le moment</p>
                 <p class="text-sm mt-2 text-slate-600">Soyez le premier à publier dans l'Espace Troc !</p>
             </div>
         {% else %}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 list-none p-0">
                 {% for annonce in annonces %}
+                    <li>
                     <a href="{{ path('troc_show', {id: annonce.id}) }}"
                        class="block bg-surface-dark rounded-xl overflow-hidden border border-white/5 hover:border-primary transition-all hover:-translate-y-1 group">
                         {# Image ou icône #}
                         <div class="h-40 bg-slate-900/60 flex items-center justify-center overflow-hidden relative">
                             {% if annonce.imageUrl %}
                                 <img src="{{ annonce.imageUrl }}" alt="{{ annonce.title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true"></div>
                             {% else %}
-                                <span class="material-symbols-outlined text-6xl text-slate-700 group-hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-6xl text-slate-700 group-hover:text-primary transition-colors" aria-hidden="true">
                                     {% if annonce.category == 'Figurines' %}monument
                                     {% elseif annonce.category == 'Films' %}movie
                                     {% elseif annonce.category == 'Jeux' %}casino
@@ -98,10 +102,10 @@
 
                         <div class="p-4">
                             {# Badges #}
-                            <div class="flex gap-2 mb-3">
+                            <div class="flex gap-2 mb-3" aria-hidden="true">
                                 <span class="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest
                                     {% if annonce.type == 'exchange' %}bg-blue-900/40 text-blue-300{% else %}bg-green-900/40 text-green-300{% endif %}">
-                                    <span class="material-symbols-outlined" style="font-size:12px">{% if annonce.type == 'exchange' %}swap_horiz{% else %}card_giftcard{% endif %}</span>
+                                    <span class="material-symbols-outlined" style="font-size:12px" aria-hidden="true">{% if annonce.type == 'exchange' %}swap_horiz{% else %}card_giftcard{% endif %}</span>
                                     {% if annonce.type == 'exchange' %}Échange{% else %}Don{% endif %}
                                 </span>
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest bg-white/5 text-slate-400">
@@ -109,18 +113,19 @@
                                 </span>
                             </div>
 
-                            <h3 class="text-white font-bold text-sm group-hover:text-primary transition-colors line-clamp-2 leading-tight">
+                            <h2 class="text-white font-bold text-sm group-hover:text-primary transition-colors line-clamp-2 leading-tight">
                                 {{ annonce.title }}
-                            </h3>
+                            </h2>
 
                             <p class="text-slate-500 text-xs mt-2 uppercase tracking-widest">{{ annonce.condition }}</p>
                             <p class="text-slate-600 text-xs mt-2">
-                                {{ annonce.owner.getFullName() }} · {{ annonce.createdAt|date('d/m/Y') }}
+                                <span class="sr-only">Publié par</span>{{ annonce.owner.getFullName() }} · {{ annonce.createdAt|date('d/m/Y') }}
                             </p>
                         </div>
                     </a>
+                    </li>
                 {% endfor %}
-            </div>
+            </ul>
         {% endif %}
 
     </div>
