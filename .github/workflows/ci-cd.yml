@@ -172,7 +172,11 @@ jobs:
         with:
           name: coverage
           path: .
-        continue-on-error: true
+
+      - name: Verify coverage file
+        run: |
+          ls -la coverage.xml junit-unit.xml || echo "Coverage files missing!"
+          wc -l coverage.xml || echo "coverage.xml is empty or missing"
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
