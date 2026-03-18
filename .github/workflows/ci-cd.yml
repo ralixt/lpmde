@@ -113,10 +113,20 @@ jobs:
           name: vendor
           path: vendor/
 
+      - name: Create required directories
+        run: mkdir -p var/log var/cache
+
       - name: Run functional tests
         run: php bin/phpunit --testsuite=functional --no-coverage
         env:
           APP_ENV: test
+          MESSENGER_TRANSPORT_DSN: "in-memory://"
+
+      - name: Run E2E tests
+        run: php bin/phpunit --testsuite=e2e --no-coverage
+        env:
+          APP_ENV: test
+          MESSENGER_TRANSPORT_DSN: "in-memory://"
 
   npm-build:
     runs-on: ubuntu-latest

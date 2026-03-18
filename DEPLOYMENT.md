@@ -132,6 +132,72 @@ git push github main
 4. **deploy-staging** - Déploiement staging (develop)
 5. **deploy-production** - Déploiement production (main/master)
 
+## ☸️ Déploiement local — Cluster Kind (bac à sable)
+
+### Prérequis
+- Docker Desktop en cours d'exécution
+- `kubectl` installé
+- `kind` installé
+
+### 1. Créer et déployer le cluster
+
+```bash
+# Créer le cluster Kind
+kind create cluster --name lpmde-sandbox --config k8s/kind/kind-cluster-config.yaml
+
+# Déployer tous les services (Postgres, RabbitMQ, Keycloak)
+kubectl apply -k k8s/kind
+
+# Attendre que tout soit prêt
+kubectl wait --for=condition=Available deployment/postgres -n lpmde-sandbox --timeout=180s
+kubectl wait --for=condition=Available deployment/rabbitmq -n lpmde-sandbox --timeout=240s
+kubectl wait --for=condition=Available deployment/keycloak -n lpmde-sandbox --timeout=360s
+
+# Vérifier
+kubectl get pods -n lpmde-sandbox
+```
+
+### 2. Exposer les services
+
+```bash
+kubectl port-forward -n lpmde-sandbox svc/keycloak 8080:8080 &
+kubectl port-forward -n lpmde-sandbox svc/rabbitmq 5672:5672 15672:15672 &
+```
+
+### 3. Initialiser l'application
+
+```bash
+docker exec -it lpmde-web-kind php bin/console doctrine:migrations:migrate --no-interaction
+docker exec -it lpmde-web-kind php bin/console doctrine:fixtures:load --no-interaction
+```
+
+### URLs d'accès
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| Application | http://localhost:8000 | — |
+| Keycloak Admin | http://localhost:8080 | admin / admin |
+| RabbitMQ Management | http://localhost:15672 | guest / guest |
+
+### Monitoring (optionnel)
+
+```bash
+docker-compose -f docker-compose.monitoring.yml up -d
+# Grafana : http://localhost:3000 (admin / admin)
+# Prometheus : http://localhost:9090
+```
+
+### Note sur le déploiement CI/CD
+
+Le pipeline GitHub Actions **ne peut pas déployer directement sur un cluster Kind local** (le runner GitHub n'a pas accès à votre machine). Le déploiement Kind est donc **manuel** via les commandes ci-dessus.
+
+En production, les jobs `deploy-staging` et `deploy-production` utiliseraient un accès SSH ou un `kubectl` connecté à un cluster managé (EKS, GKE, AKS). Pour activer le déploiement réel, configurer dans GitHub → Settings → Secrets :
+- `DEPLOY_HOST` : adresse du serveur
+- `DEPLOY_USER` : utilisateur SSH
+- `DEPLOY_KEY` : clé privée SSH
+
+---
+
 ## 🐳 Test local avec Docker
 
 ### Build de l'image
