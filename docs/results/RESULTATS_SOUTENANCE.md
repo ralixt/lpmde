@@ -1,6 +1,6 @@
 # Résultats complets — Soutenance LPMDE
 
-**Date :** 18/03/2026
+**Date :** 18/03/2026 — Security Hotspots reviewés et validés sur SonarCloud
 **Projet :** La Petite Maison de l'Épouvante — Symfony 6.4
 
 ---
