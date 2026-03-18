@@ -1,0 +1,16 @@
+Trivy Image Scan — 18/03/2026
+Image : lpmde:local (Debian 13 + PHP 8.4 + Apache)
+Commande : trivy image lpmde:local --severity HIGH,CRITICAL --scanners vuln
+
+Total : 41 (HIGH: 41, CRITICAL: 0)
+
+Toutes les CVE sont sur les packages système Debian :
+- linux-libc-dev : CVE kernel (non exploitables dans un container sans privilèges)
+- libc-bin / libc6 : CVE glibc (fixes disponibles dans 2.41-12+deb13u2)
+- openssh-client : CVE-2026-3497 (information disclosure)
+
+Aucune vulnérabilité dans le code PHP, Composer ou npm.
+
+Remédiation proposée :
+1. Sprint 1 : apt upgrade dans le Dockerfile (corrige libc6 et packages fixés)
+2. Sprint 2 : Passer à php:8.4-fpm-alpine (élimine la majorité des CVE OS Debian)

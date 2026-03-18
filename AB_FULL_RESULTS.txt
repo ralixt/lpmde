@@ -1,0 +1,29 @@
+=== Tests de charge Apache Benchmark — Wed Mar 18 20:43:05     2026 ===
+
+--- Warm-up 3 requêtes séquentielles ---
+  90%   2288
+  95%   2288
+  98%   2288
+  99%   2288
+ 100%   2288 (longest request)
+
+--- 10 concurrents, 100 requêtes ---
+Complete requests:      100
+Failed requests:        0
+Requests per second:    0.51 [#/sec] (mean)
+Time per request:       19635.793 [ms] (mean)
+Time per request:       1963.579 [ms] (mean, across all concurrent requests)
+
+--- 25 concurrents, 100 requêtes ---
+Complete requests:      100
+Failed requests:        0
+Requests per second:    0.54 [#/sec] (mean)
+Time per request:       46724.119 [ms] (mean)
+Time per request:       1868.965 [ms] (mean, across all concurrent requests)
+
+--- 50 concurrents, 100 requêtes ---
+Complete requests:      100
+Failed requests:        0
+Requests per second:    0.53 [#/sec] (mean)
+Time per request:       94828.582 [ms] (mean)
+Time per request:       1896.572 [ms] (mean, across all concurrent requests)

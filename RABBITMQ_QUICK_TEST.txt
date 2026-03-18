@@ -1,0 +1,23 @@
+=== Test RabbitMQ — Wed Mar 18 21:13:00     2026 ===
+
+--- Dispatch ghost-alert ---
+
+ [OK] Message GhostAlert publie: Evaluateur dans Soutenance LPMDE.              
+
+
+--- Vérification queue via API ---
+Queue: messages | Messages: 54 | Ready: 54
+
+--- Consume 1 message ---
+ // received a stop signal via the messenger:stop-workers command.              
+
+ // Quit the worker with CONTROL-C.                                             
+
+20:13:16 INFO      [messenger] Received message App\Message\UserLoginNotification ["class" => "App\Message\UserLoginNotification"]
+✅ NOTIFICATION TRAITÉE : L'utilisateur 'Rag Nag' s'est connecté à 15:34:21
+20:13:18 INFO      [messenger] Message App\Message\UserLoginNotification handled by App\MessageHandler\UserLoginNotificationHandler::__invoke ["class" => "App\Message\UserLoginNotification","handler" => "App\MessageHandler\UserLoginNotificationHandler::__invoke"]
+20:13:20 INFO      [messenger] App\Message\UserLoginNotification was handled successfully (acknowledging to transport). ["class" => "App\Message\UserLoginNotification"]
+20:13:20 INFO      [messenger] Stopping worker. ["transport_names" => ["async"]]
+20:13:20 INFO      [messenger] Worker stopped due to maximum count of 1 messages processed ["count" => 1]
+
+=== RabbitMQ OK ===

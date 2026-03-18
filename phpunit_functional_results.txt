@@ -1,0 +1,15 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.0
+Configuration: C:\Users\ragee\Documents\cesi MASTER\2ème année\BLOC3 - Superviser et assurer le développement des applications logicielles\RB3 (individuel)\lpmde-solo\lpmde\phpunit.xml.dist
+
+.......                                                             7 / 7 (100%)
+
+Time: 00:07.603, Memory: 64.00 MB
+
+There was 1 PHPUnit test runner warning:
+
+1) No code coverage driver available
+
+[30;43mOK, but there were issues![0m
+[30;43mTests: 7[0m[30;43m, Assertions: 8[0m[30;43m, PHPUnit Warnings: 1[0m[30;43m.[0m

@@ -1,0 +1,15 @@
+=== Tests de charge curl — Wed Mar 18 20:29:03     2026 ===
+
+--- 1 requêtes parallèles ---
+Temps total batch: 7770ms pour 1 requêtes parallèles
+
+--- 5 requêtes parallèles ---
+Temps total batch: 33301ms pour 5 requêtes parallèles
+
+--- 10 requêtes parallèles ---
+Temps total batch: 71609ms pour 10 requêtes parallèles
+
+--- 25 requêtes parallèles ---
+Temps total batch: 175472ms pour 25 requêtes parallèles
+
+=== FIN ===

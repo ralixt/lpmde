@@ -133,6 +133,47 @@ templates/
 - `/logout` - Déconnexion
 - `/test-rabbit` - Test RabbitMQ (50 messages)
 
+## 🧪 Tests
+
+### Prérequis
+
+```bash
+composer install
+```
+
+### Lancer tous les tests
+
+```bash
+php bin/phpunit
+```
+
+### Par suite
+
+```bash
+# Tests unitaires (avec couverture de code)
+php bin/phpunit --testsuite=unit --coverage-text
+
+# Tests fonctionnels (controllers, routes)
+php bin/phpunit --testsuite=functional
+
+# Tests E2E (workflows complets)
+php bin/phpunit --testsuite=e2e
+```
+
+### Générer le rapport de couverture HTML
+
+```bash
+php bin/phpunit --testsuite=unit --coverage-html var/coverage
+# Ouvrir var/coverage/index.html dans le navigateur
+```
+
+### Résultats CI
+
+Les résultats des tests (passés/échoués, coverage %) sont automatiquement poussés vers Grafana après chaque pipeline CI.
+Accessible sur http://localhost:3000 → dashboard **LPMDE - Monitoring**.
+
+---
+
 ## 📚 Documentation
 
 - [KEYCLOAK_SETUP.md](KEYCLOAK_SETUP.md) - Configuration détaillée de Keycloak

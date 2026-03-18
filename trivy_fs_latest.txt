@@ -1,0 +1,7 @@
+Trivy Filesystem Scan — 18/03/2026
+Cible : code applicatif (src/, templates/, composer.lock)
+Répertoires exclus : vendor/, node_modules/
+
+Résultat : 0 vulnérabilité HIGH/CRITICAL
+
+Le code PHP, les dépendances Composer et npm ne présentent aucune vulnérabilité HIGH ou CRITICAL.
