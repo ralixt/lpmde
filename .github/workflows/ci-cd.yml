@@ -261,21 +261,21 @@ jobs:
           kubectl config use-context kind-lpmde-sandbox
           kubectl get nodes
           kubectl get pods -n lpmde-sandbox
-        shell: pwsh
+        shell: powershell
 
       - name: Pull latest image from GHCR
         run: |
           Write-Host "Pull de l'image depuis GHCR..."
           docker pull ghcr.io/${{ github.repository }}:latest
           if ($LASTEXITCODE -ne 0) { Write-Host "Pull failed, using local image" }
-        shell: pwsh
+        shell: powershell
 
       - name: Load image into Kind
         run: |
           Write-Host "Chargement de l'image dans Kind..."
           kind load docker-image ghcr.io/${{ github.repository }}:latest --name lpmde-sandbox
           if ($LASTEXITCODE -ne 0) { Write-Host "Kind load failed, continuing..." }
-        shell: pwsh
+        shell: powershell
 
       - name: Deploy to Kind cluster
         run: |
@@ -288,7 +288,7 @@ jobs:
           Write-Host "Etat du deploiement :"
           kubectl get pods -n lpmde-sandbox
           kubectl get svc -n lpmde-sandbox
-        shell: pwsh
+        shell: powershell
 
       - name: Run smoke test
         run: |
@@ -303,7 +303,7 @@ jobs:
             exit 1
           }
           Write-Host "Smoke test passe - tous les services sont operationnels"
-        shell: pwsh
+        shell: powershell
 
   deploy-production:
     runs-on: self-hosted
@@ -323,4 +323,4 @@ jobs:
           kubectl apply -k k8s/kind/ -n lpmde-sandbox
           kubectl get pods -n lpmde-sandbox
           Write-Host "Deploiement production termine"
-        shell: pwsh
+        shell: powershell
