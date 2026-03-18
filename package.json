@@ -1,0 +1,12 @@
+{
+  "name": "lpmde",
+  "version": "1.0.0",
+  "description": "La Petite Maison de l'Épouvante — frontend build",
+  "scripts": {
+    "build": "tailwindcss -i ./assets/styles/app.css -o ./public/css/app.css --minify",
+    "dev": "tailwindcss -i ./assets/styles/app.css -o ./public/css/app.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}

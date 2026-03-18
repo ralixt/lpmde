@@ -53,6 +53,10 @@ TACHES.md
 /assets/vendor/
 ###< symfony/asset-mapper ###
 
+###> npm / Node ###
+/node_modules/
+###< npm / Node ###
+
 ###> Tasks / Prompts (local only) ###
 TACHES.md
 ###< Tasks / Prompts (local only) ###

@@ -118,7 +118,7 @@ jobs:
         env:
           APP_ENV: test
 
-  sast-npm-audit:
+  npm-build:
     runs-on: ubuntu-latest
     needs: install
     steps:
@@ -128,10 +128,24 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
+          cache: 'npm'
 
-      - name: Run npm audit
-        run: npm audit --audit-level=moderate || true
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build CSS (Tailwind)
+        run: npm run build
+
+      - name: Upload built CSS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-css
+          path: public/css/app.css
+          retention-days: 1
+
+      - name: Security audit
+        run: npm audit --audit-level=moderate
         continue-on-error: true
 
   sonar-audit:
@@ -178,7 +192,7 @@ jobs:
   # ═══════════════════════════════════════
   build-image-job:
     runs-on: ubuntu-latest
-    needs: [unit-test, e2e-test-job, sast-npm-audit, trivy-fs-audit]
+    needs: [unit-test, e2e-test-job, npm-build, trivy-fs-audit]
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop'
     permissions:
       contents: read
