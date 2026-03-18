@@ -1,4 +1,7 @@
 
+# GitHub self-hosted runner
+/actions-runner/
+
 ###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php
