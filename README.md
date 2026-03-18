@@ -34,7 +34,7 @@ Attendez 1-2 minutes que Keycloak démarre complètement.
 
 ### 3. Configurer Keycloak
 
-Suivez les instructions détaillées dans [KEYCLOAK_SETUP.md](KEYCLOAK_SETUP.md) :
+Suivez les instructions détaillées dans [KEYCLOAK_SETUP.md](docs/KEYCLOAK_SETUP.md) :
 
 1. Accédez à http://localhost:8080/admin (admin/admin)
 2. Créez un client OAuth `symfony-app`
@@ -176,9 +176,11 @@ Accessible sur http://localhost:3000 → dashboard **LPMDE - Monitoring**.
 
 ## 📚 Documentation
 
-- [KEYCLOAK_SETUP.md](KEYCLOAK_SETUP.md) - Configuration détaillée de Keycloak
-- [DOCKER_QUICK_START.md](DOCKER_QUICK_START.md) - Démarrage rapide avec Docker
-- [DEPLOYMENT.md](DEPLOYMENT.md) - Guide de déploiement
+- [KEYCLOAK_SETUP.md](docs/KEYCLOAK_SETUP.md) - Configuration détaillée de Keycloak
+- [DOCKER_QUICK_START.md](docs/DOCKER_QUICK_START.md) - Démarrage rapide avec Docker
+- [DEPLOYMENT.md](docs/DEPLOYMENT.md) - Guide de déploiement
+- [DEMARRAGE_LOCAL.md](docs/DEMARRAGE_LOCAL.md) - Démarrage en local
+- [docs/results/RESULTATS_SOUTENANCE.md](docs/results/RESULTATS_SOUTENANCE.md) - Résultats complets des tests
 
 ## 🐛 Dépannage
 
