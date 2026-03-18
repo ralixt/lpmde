@@ -198,6 +198,61 @@ jobs:
         continue-on-error: true
 
   # ═══════════════════════════════════════
+  # STAGE 2.5 : PUSH MÉTRIQUES CI → GRAFANA
+  # ═══════════════════════════════════════
+  push-metrics-job:
+    runs-on: self-hosted
+    needs: unit-test
+    if: always()
+    steps:
+      - name: Download test artifacts
+        run: gh run download ${{ github.run_id }} --name coverage --dir ./ci-artifacts
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Parse and push metrics to Pushgateway
+        shell: powershell
+        run: |
+          # Parse JUnit XML
+          [xml]$junit = Get-Content ./ci-artifacts/junit-unit.xml
+          $suite    = $junit.testsuites.testsuite
+          $total    = [int]$suite.tests
+          $failures = [int]$suite.failures
+          $errors   = [int]$suite.errors
+          $skipped  = [int]$suite.skipped
+          $passed   = $total - $failures - $errors - $skipped
+
+          # Parse coverage XML (Clover)
+          [xml]$cov   = Get-Content ./ci-artifacts/coverage.xml
+          $metrics    = $cov.coverage.project.metrics
+          $covTotal   = [int]$metrics.statements
+          $covCovered = [int]$metrics.coveredstatements
+          $covPct     = if ($covTotal -gt 0) { [math]::Round($covCovered / $covTotal * 100, 2) } else { 0 }
+
+          # Build/push status
+          $branch = "${{ github.ref_name }}"
+          $status = if ($failures -eq 0 -and $errors -eq 0) { 1 } else { 0 }
+
+          $failed = $failures + $errors
+          $lines = @(
+            "ci_tests_passed{branch=`"$branch`"} $passed",
+            "ci_tests_failed{branch=`"$branch`"} $failed",
+            "ci_tests_skipped{branch=`"$branch`"} $skipped",
+            "ci_coverage_percent{branch=`"$branch`"} $covPct",
+            "ci_build_success{branch=`"$branch`"} $status"
+          )
+          $body = $lines -join "`n"
+          Invoke-RestMethod -Uri "http://localhost:9091/metrics/job/github_ci/branch/$branch" `
+            -Method Post -Body $body -ContentType "text/plain"
+          Write-Host "Metrics pushed: passed=$passed failed=$failed coverage=$covPct% build=$status"
+
+      - name: Cleanup artifacts
+        if: always()
+        shell: powershell
+        run: Remove-Item -Recurse -Force ./ci-artifacts -ErrorAction SilentlyContinue
+
+  # ═══════════════════════════════════════
   # STAGE 3 : RELEASE (build Docker + push GHCR)
   # ═══════════════════════════════════════
   build-image-job:

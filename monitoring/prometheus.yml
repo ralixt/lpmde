@@ -16,6 +16,12 @@ scrape_configs:
       - targets: ['host.docker.internal:8000']
     scrape_interval: 30s
 
+  # Métriques CI/CD via Pushgateway
+  - job_name: 'pushgateway'
+    honor_labels: true
+    static_configs:
+      - targets: ['pushgateway:9091']
+
   # Métriques RabbitMQ via l'exporter
   - job_name: 'rabbitmq'
     static_configs:
