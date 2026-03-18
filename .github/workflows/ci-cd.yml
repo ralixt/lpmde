@@ -242,7 +242,7 @@ jobs:
             "ci_coverage_percent{branch=`"$branch`"} $covPct",
             "ci_build_success{branch=`"$branch`"} $status"
           )
-          $body = $lines -join "`n"
+          $body = ($lines -join "`n") + "`n"
           Invoke-RestMethod -Uri "http://localhost:9091/metrics/job/github_ci/branch/$branch" `
             -Method Post -Body $body -ContentType "text/plain"
           Write-Host "Metrics pushed: passed=$passed failed=$failed coverage=$covPct% build=$status"
