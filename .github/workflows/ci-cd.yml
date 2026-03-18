@@ -175,8 +175,10 @@ jobs:
 
       - name: Verify coverage file
         run: |
+          echo "=== Workspace: ${{ github.workspace }} ==="
           ls -la coverage.xml junit-unit.xml || echo "Coverage files missing!"
-          wc -l coverage.xml || echo "coverage.xml is empty or missing"
+          echo "=== First 5 lines of coverage.xml ==="
+          head -5 coverage.xml
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
@@ -187,7 +189,7 @@ jobs:
           args: >
             -Dsonar.php.coverage.reportPaths=${{ github.workspace }}/coverage.xml
             -Dsonar.php.tests.reportPath=${{ github.workspace }}/junit-unit.xml
-        continue-on-error: true
+            -Dsonar.verbose=true
 
   trivy-fs-audit:
     runs-on: ubuntu-latest
