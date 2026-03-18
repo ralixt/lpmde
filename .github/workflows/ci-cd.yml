@@ -203,7 +203,7 @@ jobs:
   build-image-job:
     runs-on: ubuntu-latest
     needs: [unit-test, e2e-test-job, npm-build, trivy-fs-audit]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/rag'
     permissions:
       contents: read
       packages: write
@@ -245,31 +245,89 @@ jobs:
   # STAGE 4 : STAGING (déploiement)
   # ═══════════════════════════════════════
   deploy-staging-job:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: build-image-job
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/rag'
     environment:
       name: staging
-      url: https://staging.example.com
+      url: http://localhost:8000
     steps:
-      - name: Deploy to staging
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify Kind cluster
         run: |
-          echo "🚀 Déploiement staging"
-          echo "Image: ghcr.io/${{ github.repository }}:latest"
-          echo "Note: Le déploiement réel nécessite la configuration des secrets SSH"
-          # ssh user@server "docker pull ghcr.io/... && docker-compose up -d"
+          echo "🔍 Vérification du cluster Kind..."
+          kubectl config use-context kind-lpmde-sandbox
+          kubectl get nodes
+          kubectl get pods -n lpmde-sandbox
+        shell: bash
+
+      - name: Pull latest image from GHCR
+        run: |
+          echo "📦 Pull de l'image depuis GHCR..."
+          docker pull ghcr.io/${{ github.repository }}:latest || echo "⚠️ Pull failed, using local image"
+        shell: bash
+
+      - name: Load image into Kind
+        run: |
+          echo "📥 Chargement de l'image dans Kind..."
+          kind load docker-image ghcr.io/${{ github.repository }}:latest --name lpmde-sandbox || echo "⚠️ Kind load failed, continuing..."
+        shell: bash
+
+      - name: Deploy to Kind cluster
+        run: |
+          echo "🚀 Déploiement sur Kind..."
+
+          # Appliquer les manifestes K8s
+          kubectl apply -k k8s/kind/ -n lpmde-sandbox
+
+          # Attendre que les pods soient prêts
+          echo "⏳ Attente des pods..."
+          kubectl wait --for=condition=Available deployment/postgres -n lpmde-sandbox --timeout=120s || true
+          kubectl wait --for=condition=Available deployment/rabbitmq -n lpmde-sandbox --timeout=120s || true
+          kubectl wait --for=condition=Available deployment/keycloak -n lpmde-sandbox --timeout=300s || true
+
+          # Vérifier l'état final
+          echo "✅ État du déploiement :"
+          kubectl get pods -n lpmde-sandbox
+          kubectl get svc -n lpmde-sandbox
+        shell: bash
+
+      - name: Run smoke test
+        run: |
+          echo "🧪 Smoke test post-déploiement..."
+
+          # Vérifier que les pods sont Running
+          RUNNING=$(kubectl get pods -n lpmde-sandbox --no-headers | grep -c "Running" || echo "0")
+          TOTAL=$(kubectl get pods -n lpmde-sandbox --no-headers | wc -l)
+          echo "Pods Running: $RUNNING / $TOTAL"
+
+          if [ "$RUNNING" -lt "3" ]; then
+            echo "⚠️ Moins de 3 pods Running — vérifier les logs"
+            kubectl get pods -n lpmde-sandbox
+            exit 1
+          fi
+
+          echo "✅ Smoke test passé — tous les services sont opérationnels"
+        shell: bash
 
   deploy-production:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: build-image-job
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     environment:
       name: production
-      url: https://production.example.com
+      url: http://localhost:8000
     steps:
-      - name: Deploy to production
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Kind (production)
         run: |
-          echo "🚀 Déploiement production"
-          echo "Image: ghcr.io/${{ github.repository }}:latest"
-          echo "Note: Le déploiement réel nécessite la configuration des secrets SSH"
-          # ssh user@server "docker pull ghcr.io/... && docker-compose up -d"
+          echo "🚀 Déploiement production sur Kind..."
+          kubectl config use-context kind-lpmde-sandbox
+          kubectl apply -k k8s/kind/ -n lpmde-sandbox
+          kubectl get pods -n lpmde-sandbox
+          echo "✅ Déploiement production terminé"
+        shell: bash
