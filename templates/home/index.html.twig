@@ -89,12 +89,14 @@
             </p>
             <div class="flex flex-wrap gap-4 pt-4">
                 <button
-                    class="bg-primary hover:bg-primary/90 text-white font-bold py-4 px-10 rounded-lg flex items-center gap-2 transition-all uppercase text-sm tracking-widest group">
+                    class="bg-primary hover:bg-primary/90 text-white font-bold py-4 px-10 rounded-lg flex items-center gap-2 transition-all uppercase text-sm tracking-widest group"
+                    data-tooltip="Explorer la collection">
                     Shop the Collection
                     <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" aria-hidden="true">arrow_forward</span>
                 </button>
                 <button
-                    class="bg-white/10 hover:bg-white/20 text-white font-bold py-4 px-10 rounded-lg transition-all uppercase text-sm tracking-widest backdrop-blur-md">
+                    class="bg-white/10 hover:bg-white/20 text-white font-bold py-4 px-10 rounded-lg transition-all uppercase text-sm tracking-widest backdrop-blur-md"
+                    data-tooltip="Voir le fanzine">
                     View Fanzine
                 </button>
             </div>
@@ -115,7 +117,7 @@
                 <p class="text-slate-500 text-sm mt-1 uppercase tracking-widest">Featured artifacts &amp; media</p>
             </div>
             <a class="text-primary text-xs font-bold uppercase tracking-widest flex items-center gap-2 hover:underline"
-                href="#">
+                href="#" data-tooltip="Voir tous les articles">
                 View All Vault Items <span class="material-symbols-outlined text-sm" aria-hidden="true">trending_flat</span>
             </a>
         </div>
@@ -130,7 +132,8 @@
                     <div
                         class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
                         <button
-                            class="w-full bg-primary text-white py-3 rounded-lg font-bold text-xs uppercase tracking-widest transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                            class="w-full bg-primary text-white py-3 rounded-lg font-bold text-xs uppercase tracking-widest transform translate-y-4 group-hover:translate-y-0 transition-transform"
+                            data-tooltip="Ajouter à ma crypte">
                             Add to Crypt
                         </button>
                     </div>
@@ -154,7 +157,8 @@
                     <div
                         class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
                         <button
-                            class="w-full bg-primary text-white py-3 rounded-lg font-bold text-xs uppercase tracking-widest transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                            class="w-full bg-primary text-white py-3 rounded-lg font-bold text-xs uppercase tracking-widest transform translate-y-4 group-hover:translate-y-0 transition-transform"
+                            data-tooltip="Ajouter à ma crypte">
                             Add to Crypt
                         </button>
                     </div>
@@ -181,7 +185,8 @@
                     <div
                         class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
                         <button
-                            class="w-full bg-primary text-white py-3 rounded-lg font-bold text-xs uppercase tracking-widest transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                            class="w-full bg-primary text-white py-3 rounded-lg font-bold text-xs uppercase tracking-widest transform translate-y-4 group-hover:translate-y-0 transition-transform"
+                            data-tooltip="Ajouter à ma crypte">
                             Add to Crypt
                         </button>
                     </div>
@@ -205,7 +210,8 @@
                     <div
                         class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
                         <button
-                            class="w-full bg-primary text-white py-3 rounded-lg font-bold text-xs uppercase tracking-widest transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                            class="w-full bg-primary text-white py-3 rounded-lg font-bold text-xs uppercase tracking-widest transform translate-y-4 group-hover:translate-y-0 transition-transform"
+                            data-tooltip="Ajouter à ma crypte">
                             Add to Crypt
                         </button>
                     </div>
@@ -316,7 +322,8 @@
             </div>
             <div class="mt-8 flex justify-center">
                 <a href="{{ path('troc_index') }}"
-                    class="text-sm font-bold uppercase tracking-[0.3em] border-b-2 border-primary py-2 hover:text-primary transition-colors text-white">Enter
+                    class="text-sm font-bold uppercase tracking-[0.3em] border-b-2 border-primary py-2 hover:text-primary transition-colors text-white"
+                    data-tooltip="Accéder à l'espace Troc">Enter
                     The Exchange</a>
             </div>
         </div>
@@ -382,11 +389,11 @@
                     Purveyors of fine horror artifacts since 2024.</p>
                 <div class="flex gap-4">
                     <a class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-primary transition-colors"
-                        href="#" aria-label="Site web"><span class="material-symbols-outlined text-sm text-white" aria-hidden="true">public</span></a>
+                        href="#" aria-label="Site web" data-tooltip="Site web"><span class="material-symbols-outlined text-sm text-white" aria-hidden="true">public</span></a>
                     <a class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-primary transition-colors"
-                        href="#" aria-label="Nous contacter par email"><span class="material-symbols-outlined text-sm text-white" aria-hidden="true">mail</span></a>
+                        href="#" aria-label="Nous contacter par email" data-tooltip="Nous contacter"><span class="material-symbols-outlined text-sm text-white" aria-hidden="true">mail</span></a>
                     <a class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-primary transition-colors"
-                        href="#" aria-label="Flux RSS"><span class="material-symbols-outlined text-sm text-white" aria-hidden="true">rss_feed</span></a>
+                        href="#" aria-label="Flux RSS" data-tooltip="Flux RSS"><span class="material-symbols-outlined text-sm text-white" aria-hidden="true">rss_feed</span></a>
                 </div>
             </div>
             <div>
@@ -415,7 +422,8 @@
                         class="w-full bg-white/5 border-white/10 rounded-lg py-2 px-4 text-sm focus:ring-primary focus:border-primary"
                         placeholder="Email address" type="email" />
                     <button
-                        class="w-full bg-primary py-2 rounded-lg font-bold text-xs uppercase tracking-[0.2em] text-white">Subscribe</button>
+                        class="w-full bg-primary py-2 rounded-lg font-bold text-xs uppercase tracking-[0.2em] text-white"
+                        data-tooltip="S'abonner à la newsletter">Subscribe</button>
                 </form>
             </div>
         </div>
