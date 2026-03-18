@@ -183,6 +183,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.php.coverage.reportPaths=${{ github.workspace }}/coverage.xml
+            -Dsonar.php.tests.reportPath=${{ github.workspace }}/junit-unit.xml
         continue-on-error: true
 
   trivy-fs-audit:
