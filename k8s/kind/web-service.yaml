@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: lpmde-web
+  namespace: lpmde-sandbox
+  labels:
+    app: lpmde-web
+spec:
+  selector:
+    app: lpmde-web
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP

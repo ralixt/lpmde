@@ -285,6 +285,7 @@ jobs:
           kubectl wait --for=condition=Available deployment/postgres -n lpmde-sandbox --timeout=120s
           kubectl wait --for=condition=Available deployment/rabbitmq -n lpmde-sandbox --timeout=120s
           kubectl wait --for=condition=Available deployment/keycloak -n lpmde-sandbox --timeout=300s
+          kubectl wait --for=condition=Available deployment/lpmde-web -n lpmde-sandbox --timeout=180s
           Write-Host "Etat du deploiement :"
           kubectl get pods -n lpmde-sandbox
           kubectl get svc -n lpmde-sandbox
@@ -297,8 +298,8 @@ jobs:
           $running = ($pods | Select-String "Running").Count
           $total = $pods.Count
           Write-Host "Pods Running: $running / $total"
-          if ($running -lt 3) {
-            Write-Host "Moins de 3 pods Running - verifier les logs"
+          if ($running -lt 4) {
+            Write-Host "Moins de 4 pods Running - verifier les logs"
             kubectl get pods -n lpmde-sandbox
             exit 1
           }

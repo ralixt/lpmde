@@ -11,3 +11,5 @@ resources:
   - rabbitmq-service.yaml
   - keycloak-deployment.yaml
   - keycloak-service.yaml
+  - web-deployment.yaml
+  - web-service.yaml

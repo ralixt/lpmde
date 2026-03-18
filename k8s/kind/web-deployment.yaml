@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lpmde-web
+  namespace: lpmde-sandbox
+  labels:
+    app: lpmde-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lpmde-web
+  template:
+    metadata:
+      labels:
+        app: lpmde-web
+    spec:
+      containers:
+        - name: lpmde-web
+          image: ghcr.io/ralixt/lpmde:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          env:
+            - name: APP_ENV
+              value: prod
+            - name: APP_DEBUG
+              value: "0"
+            - name: APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: lpmde-sandbox-secrets
+                  key: app-secret
+            - name: DATABASE_URL
+              value: "sqlite:///%kernel.project_dir%/var/data.db"
+            - name: MESSENGER_TRANSPORT_DSN
+              value: "amqp://guest:guest@rabbitmq:5672/%2f/messages"
+            - name: KEYCLOAK_BASE_URL
+              value: "http://keycloak:8080"
+            - name: KEYCLOAK_REALM
+              value: "symfony-app"
+            - name: KEYCLOAK_CLIENT_ID
+              value: "symfony-app"
+            - name: KEYCLOAK_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: lpmde-sandbox-secrets
+                  key: keycloak-client-secret
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 60
+            periodSeconds: 20
