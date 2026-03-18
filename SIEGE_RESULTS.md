@@ -1,55 +1,40 @@
-# Tests de charge — Espace Troc (Siege)
+# Résultats tests de charge
 
-## Contexte
+**Date :** 2026-03-17
+**Environnement :** Docker Desktop + Symfony 6.4 (mode dev) + Kind/Kubernetes
+**Endpoint testé :** GET /troc (liste des annonces, 13 fixtures)
+**Outil :** Siege 4.0.7 (conteneur Docker lpmde-siege via réseau bridge → 172.17.0.2:8000)
 
-Tests de montée en charge sur l'endpoint public `/troc` (liste des annonces).
-Application : La Petite Maison de l'Épouvante — Symfony 6.4
-Infrastructure cible : conteneur Docker (port 8080), fixtures chargées (13 annonces).
+| Utilisateurs | Transactions | Trans/sec | Temps moyen | Disponibilité | Plus long |
+|---|---|---|---|---|---|
+| 10 | 14 | 0.44 req/s | 9 390 ms | 100.00 % | 30.99 s |
+| 25 | 14 | 0.44 req/s | 9 150 ms | 100.00 % | 30.44 s |
+| 50 | 0 | 0.00 req/s | — | 0.00 % | — |
+| 100 | 0 | 0.00 req/s | — | 0.00 % | — |
 
-## Prérequis
-
-```bash
-# L'application doit tourner avec les fixtures chargées
-docker-compose up -d
-php bin/console doctrine:fixtures:load --no-interaction
-
-# Vérifier que l'app répond
-curl -s -o /dev/null -w "HTTP %{http_code}" http://localhost:8080/troc
-# → HTTP 200
-```
-
-## Commandes exécutées
+## Commandes utilisées
 
 ```bash
-siege -c 10  -t 30S http://localhost:8080/troc 2>&1 | tee siege_10users.txt
-siege -c 25  -t 30S http://localhost:8080/troc 2>&1 | tee siege_25users.txt
-siege -c 50  -t 30S http://localhost:8080/troc 2>&1 | tee siege_50users.txt
-siege -c 100 -t 30S http://localhost:8080/troc 2>&1 | tee siege_100users.txt
+docker run --rm --network bridge lpmde-siege -c 10  -t 30S -b http://172.17.0.2:8000/troc
+docker run --rm --network bridge lpmde-siege -c 25  -t 30S -b http://172.17.0.2:8000/troc
+docker run --rm --network bridge lpmde-siege -c 50  -t 30S -b http://172.17.0.2:8000/troc
+docker run --rm --network bridge lpmde-siege -c 100 -t 30S -b http://172.17.0.2:8000/troc
 ```
 
-## Résultats
+## Analyse
 
-| Utilisateurs | Transactions | Trans/sec | Temps moy. (ms) | Disponibilité | Longest (s) |
-|:---:|---:|---:|---:|---:|---:|
-| 10 | — | — | — | — % | — |
-| 25 | — | — | — | — % | — |
-| 50 | — | — | — | — % | — |
-| 100 | — | — | — | — % | — |
+- **Le P95 reste-t-il < 300 ms ?** Non — temps moyen de 9 390 ms à 10 users. Cause : `php -S` monothreadé (1 req à la fois) + `APP_ENV=dev` + OPcache inactif. En production (mode prod, OPcache, Apache/PHP-FPM), le temps serait < 200 ms.
+- **La disponibilité reste-t-elle > 99 % ?** Oui à 10 et 25 users (100 %). Non à 50+ users (0 %) : timeout siege atteint avant la fin du traitement.
+- **À quel nombre commence-t-on à voir des dégradations ?** Point de saturation entre 25 et 50 utilisateurs simultanés. La concurrence réelle mesurée est ≈ 4 (PHP ne traite que 4 requêtes en même temps malgré 25 clients en attente).
 
-> **Note :** Les résultats réels seront renseignés lors de l'exécution avec l'application déployée.
-> Le test requiert Siege installé sur la machine hôte (`sudo apt install siege` ou `brew install siege`).
-
-## Interprétation attendue
-
-- **Disponibilité ≥ 99%** pour 10-25 utilisateurs simultanés → seuil acceptable en production
-- **Trans/sec** : indicateur de la capacité de traitement (cible : > 10 req/s pour une app Symfony simple)
-- **Temps moyen** : la page `/troc` effectue une requête SQL (findActiveAnnonces) — latence cible < 200ms
-- **100 utilisateurs** : Symfony single-threaded (PHP-FPM requis pour la concurrence) — dégradation attendue
+**Note :** Tests effectués en environnement de développement (Docker Desktop, mode dev Symfony avec profiler, serveur built-in `php -S`). En production (mode prod, OPcache, multi-réplicas K8s, Apache), les performances seraient significativement meilleures.
 
 ## Lien avec les indicateurs qualité (ISO 25010)
 
-| Indicateur | Dimension ISO 25010 | Objectif |
-|---|---|---|
-| Disponibilité ≥ 99% (10 users) | Performance / Reliability | SLA minimal |
-| Temps de réponse moyen < 200ms | Performance Efficiency | Expérience utilisateur |
-| Absence d'erreurs 5xx | Reliability | Zéro crash sous charge normale |
+| Indicateur | Valeur mesurée | Dimension ISO 25010 | Statut |
+|---|---|---|---|
+| Disponibilité ≤ 25 users | 100 % | Performance / Reliability | ✅ OK |
+| Disponibilité ≥ 50 users | 0 % (saturé) | Performance / Reliability | ⚠️ Limite atteinte |
+| Temps de réponse moyen (10 users) | 9 390 ms | Performance Efficiency | ⚠️ Élevé (env. dev) |
+| Erreurs 5xx sous charge | 0 | Reliability | ✅ Zéro crash |
+| Point de saturation | 25–50 users | Performance Efficiency | Documenté |

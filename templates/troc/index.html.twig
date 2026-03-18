@@ -3,15 +3,38 @@
 {% block title %}Espace Troc{% endblock %}
 
 {% block body %}
-<div class="min-h-screen bg-background-dark py-8 px-4">
-    <div class="max-w-7xl mx-auto">
+<div class="min-h-screen bg-background-dark py-12 px-4">
+    <div class="max-w-[1200px] mx-auto">
 
         {# En-tête #}
-        <div class="mb-8">
-            <h1 class="text-4xl font-bold text-white font-display mb-2">
-                <span class="text-primary">🩸</span> Espace Troc
-            </h1>
-            <p class="text-slate-400">Échangez et donnez vos trésors de l'horreur entre passionnés</p>
+        <div class="mb-10">
+            <span class="inline-block px-3 py-1 bg-primary/20 text-primary border border-primary/30 text-[10px] font-bold uppercase tracking-widest rounded mb-4">Communauté</span>
+            <div class="flex items-end justify-between gap-6">
+                <div>
+                    <h1 class="text-5xl font-black uppercase tracking-tighter text-white leading-none">The Troc Zone</h1>
+                    <p class="text-slate-500 text-sm mt-2 uppercase tracking-widest">Échanges & dons entre passionnés de l'horreur</p>
+                </div>
+                {% if app.session.get('is_authenticated') %}
+                    <div class="flex gap-3 shrink-0">
+                        <a href="{{ path('troc_mes_annonces') }}"
+                           class="flex items-center gap-2 border border-slate-700 hover:border-primary text-slate-300 px-5 py-2 rounded font-bold transition-colors text-xs uppercase tracking-widest">
+                            <span class="material-symbols-outlined text-base">list_alt</span>
+                            Mes annonces
+                        </a>
+                        <a href="{{ path('troc_new') }}"
+                           class="flex items-center gap-2 bg-primary hover:bg-red-700 text-white px-5 py-2 rounded font-bold transition-colors text-xs uppercase tracking-widest">
+                            <span class="material-symbols-outlined text-base">add</span>
+                            Publier
+                        </a>
+                    </div>
+                {% else %}
+                    <a href="{{ path('app_login_keycloak') }}"
+                       class="flex items-center gap-2 border border-slate-700 hover:border-primary text-slate-300 px-5 py-2 rounded font-bold transition-colors text-xs uppercase tracking-widest shrink-0">
+                        <span class="material-symbols-outlined text-base">login</span>
+                        Connexion pour publier
+                    </a>
+                {% endif %}
+            </div>
         </div>
 
         {# Flash messages #}
@@ -26,84 +49,73 @@
             {% endfor %}
         {% endfor %}
 
-        {# Filtres par catégorie #}
-        <div class="flex flex-wrap gap-2 mb-8">
-            <a href="{{ path('troc_index') }}"
-               class="px-4 py-2 rounded-full text-sm font-medium transition-colors
-                      {% if not currentCategory %}bg-primary text-white{% else %}bg-surface-dark text-slate-300 border border-slate-700 hover:border-primary{% endif %}">
-                Tout
-            </a>
-            {% for cat in categories %}
-                <a href="{{ path('troc_index', {category: cat}) }}"
-                   class="px-4 py-2 rounded-full text-sm font-medium transition-colors
-                          {% if currentCategory == cat %}bg-primary text-white{% else %}bg-surface-dark text-slate-300 border border-slate-700 hover:border-primary{% endif %}">
-                    {{ cat }}
+        {# Filtres + compteur #}
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ path('troc_index') }}"
+                   class="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors
+                          {% if not currentCategory %}bg-primary text-white{% else %}bg-surface-dark text-slate-400 border border-slate-700 hover:border-primary{% endif %}">
+                    Tout
                 </a>
-            {% endfor %}
-        </div>
-
-        {# Bouton publier #}
-        <div class="flex justify-between items-center mb-6">
-            <p class="text-slate-400 text-sm">{{ annonces|length }} annonce(s)</p>
-            {% if app.session.get('is_authenticated') %}
-                <a href="{{ path('troc_new') }}"
-                   class="bg-primary hover:bg-red-700 text-white px-5 py-2 rounded font-medium transition-colors">
-                    + Publier une annonce
-                </a>
-            {% else %}
-                <a href="{{ path('app_login_keycloak') }}"
-                   class="bg-surface-dark border border-slate-600 hover:border-primary text-slate-300 px-5 py-2 rounded font-medium transition-colors">
-                    Connectez-vous pour publier
-                </a>
-            {% endif %}
+                {% for cat in categories %}
+                    <a href="{{ path('troc_index', {category: cat}) }}"
+                       class="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors
+                              {% if currentCategory == cat %}bg-primary text-white{% else %}bg-surface-dark text-slate-400 border border-slate-700 hover:border-primary{% endif %}">
+                        {{ cat }}
+                    </a>
+                {% endfor %}
+            </div>
+            <p class="text-slate-600 text-xs uppercase tracking-widest">{{ annonces|length }} annonce{{ annonces|length > 1 ? 's' : '' }}</p>
         </div>
 
         {# Grille d'annonces #}
         {% if annonces is empty %}
-            <div class="text-center py-20 text-slate-500">
-                <p class="text-6xl mb-4">👻</p>
-                <p class="text-xl">Aucune annonce pour le moment.</p>
-                <p class="text-sm mt-2">Soyez le premier à publier dans l'Espace Troc !</p>
+            <div class="text-center py-24 bg-surface-dark rounded-2xl border border-white/5">
+                <span class="material-symbols-outlined text-7xl text-slate-700 block mb-4">swap_calls</span>
+                <p class="text-xl font-black uppercase tracking-tighter text-slate-400">Aucune annonce pour le moment</p>
+                <p class="text-sm mt-2 text-slate-600">Soyez le premier à publier dans l'Espace Troc !</p>
             </div>
         {% else %}
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {% for annonce in annonces %}
                     <a href="{{ path('troc_show', {id: annonce.id}) }}"
-                       class="block bg-surface-dark rounded-xl overflow-hidden border border-slate-800 hover:border-primary transition-all hover:-translate-y-1 group">
-                        {# Image #}
-                        <div class="h-40 bg-slate-900 flex items-center justify-center overflow-hidden">
+                       class="block bg-surface-dark rounded-xl overflow-hidden border border-white/5 hover:border-primary transition-all hover:-translate-y-1 group">
+                        {# Image ou icône #}
+                        <div class="h-40 bg-slate-900/60 flex items-center justify-center overflow-hidden relative">
                             {% if annonce.imageUrl %}
-                                <img src="{{ annonce.imageUrl }}" alt="{{ annonce.title }}" class="w-full h-full object-cover">
+                                <img src="{{ annonce.imageUrl }}" alt="{{ annonce.title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             {% else %}
-                                <span class="text-5xl">
-                                    {% if annonce.category == 'Figurines' %}🗿
-                                    {% elseif annonce.category == 'Films' %}🎬
-                                    {% elseif annonce.category == 'Jeux' %}🎲
-                                    {% elseif annonce.category == 'Fanzines' %}📰
-                                    {% else %}📚{% endif %}
+                                <span class="material-symbols-outlined text-6xl text-slate-700 group-hover:text-primary transition-colors">
+                                    {% if annonce.category == 'Figurines' %}monument
+                                    {% elseif annonce.category == 'Films' %}movie
+                                    {% elseif annonce.category == 'Jeux' %}casino
+                                    {% elseif annonce.category == 'Fanzines' %}newspaper
+                                    {% else %}menu_book{% endif %}
                                 </span>
                             {% endif %}
                         </div>
 
                         <div class="p-4">
                             {# Badges #}
-                            <div class="flex gap-2 mb-2">
-                                <span class="px-2 py-0.5 rounded text-xs font-medium
-                                    {% if annonce.type == 'exchange' %}bg-blue-900/50 text-blue-300{% else %}bg-green-900/50 text-green-300{% endif %}">
-                                    {% if annonce.type == 'exchange' %}⇄ Échange{% else %}🎁 Don{% endif %}
+                            <div class="flex gap-2 mb-3">
+                                <span class="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest
+                                    {% if annonce.type == 'exchange' %}bg-blue-900/40 text-blue-300{% else %}bg-green-900/40 text-green-300{% endif %}">
+                                    <span class="material-symbols-outlined" style="font-size:12px">{% if annonce.type == 'exchange' %}swap_horiz{% else %}card_giftcard{% endif %}</span>
+                                    {% if annonce.type == 'exchange' %}Échange{% else %}Don{% endif %}
                                 </span>
-                                <span class="px-2 py-0.5 rounded text-xs bg-slate-700 text-slate-300">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest bg-white/5 text-slate-400">
                                     {{ annonce.category }}
                                 </span>
                             </div>
 
-                            <h3 class="text-white font-semibold text-sm group-hover:text-primary transition-colors line-clamp-2">
+                            <h3 class="text-white font-bold text-sm group-hover:text-primary transition-colors line-clamp-2 leading-tight">
                                 {{ annonce.title }}
                             </h3>
 
-                            <p class="text-slate-500 text-xs mt-1">État : {{ annonce.condition }}</p>
+                            <p class="text-slate-500 text-xs mt-2 uppercase tracking-widest">{{ annonce.condition }}</p>
                             <p class="text-slate-600 text-xs mt-2">
-                                Par {{ annonce.owner.getFullName() }} · {{ annonce.createdAt|date('d/m/Y') }}
+                                {{ annonce.owner.getFullName() }} · {{ annonce.createdAt|date('d/m/Y') }}
                             </p>
                         </div>
                     </a>

@@ -316,9 +316,9 @@
                 </div>
             </div>
             <div class="mt-8 flex justify-center">
-                <button
+                <a href="{{ path('troc_index') }}"
                     class="text-sm font-bold uppercase tracking-[0.3em] border-b-2 border-primary py-2 hover:text-primary transition-colors text-white">Enter
-                    The Exchange</button>
+                    The Exchange</a>
             </div>
         </div>
     </section>
@@ -402,7 +402,7 @@
             <div>
                 <h4 class="font-bold uppercase tracking-widest text-xs mb-6 text-primary">Community</h4>
                 <ul class="space-y-4 text-sm text-slate-400">
-                    <li><a class="hover:text-white transition-colors" href="#">Trade Forum</a></li>
+                    <li><a class="hover:text-white transition-colors" href="{{ path('troc_index') }}">Trade Forum</a></li>
                     <li><a class="hover:text-white transition-colors" href="#">The Crypt Reader</a></li>
                     <li><a class="hover:text-white transition-colors" href="#">Local Gatherings</a></li>
                     <li><a class="hover:text-white transition-colors" href="#">Fan Art Submissions</a></li>

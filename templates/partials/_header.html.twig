@@ -1,12 +1,12 @@
 <header class="sticky top-0 z-50 glass-nav border-b border-white/10">
     <div class="max-w-[1500px] mx-auto px-4 lg:px-10 h-20 flex items-center justify-between gap-8">
         <!-- Logo Area -->
-        <div class="flex items-center gap-3 shrink-0">
+        <a href="{{ path('homepage') }}" class="flex items-center gap-3 shrink-0">
             <div class="text-primary">
                 <img src="{{ asset('img/logo.png') }}" class="logo-site" alt="">
             </div>
             <h1 class="text-xl font-bold tracking-tight uppercase hidden md:block text-white">La Petite Maison de l'épouvante</h1>
-        </div>
+        </a>
         <!-- Main Nav Links -->
         <nav class="hidden lg:flex items-center gap-8 uppercase text-xs font-semibold tracking-widest text-slate-400">
             <a class="hover:text-primary transition-colors" href="#">Cinema</a>
@@ -34,7 +34,7 @@
             {% if app.session.get('is_authenticated') %}
                 <!-- User Menu (Connected) -->
                 <div class="relative group">
-                    <button class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all">
+                    <button class="flex items-center gap-2 px-4 py-2 bg-primary/20 hover:bg-primary border border-primary/40 rounded-lg transition-all">
                         <span class="text-white material-symbols-outlined">account_circle</span>
                         <span class="text-white text-sm font-semibold hidden md:block">{{ app.session.get('user_name') }}</span>
                     </button>
@@ -45,9 +45,13 @@
                             <p class="text-xs text-gray-600">{{ app.session.get('user_email') }}</p>
                         </div>
                         <div class="py-2">
-                            <a href="{{ path('app_profile') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors">
+                            <a href="{{ path('app_profile') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-primary/10 hover:text-primary transition-colors">
                                 <span class="material-symbols-outlined text-lg">person</span>
                                 Mon Profil
+                            </a>
+                            <a href="{{ path('troc_mes_annonces') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-primary/10 hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-lg">swap_calls</span>
+                                Mes annonces
                             </a>
                             <a href="{{ path('app_logout') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                 <span class="material-symbols-outlined text-lg">logout</span>

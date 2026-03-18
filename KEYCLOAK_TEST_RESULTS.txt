@@ -1,0 +1,73 @@
+=== TEST EXPÉRIMENTATION KEYCLOAK OAuth2/OIDC — Tue Mar 17 19:18:49     2026 ===
+
+ENVIRONNEMENT
+=============
+- Cluster Kind : kind-lpmde-sandbox (namespace lpmde-sandbox)
+- Pod Keycloak : keycloak-55945795d5-qk65k (Running, 3 restarts)
+- Port-forward actif : 8080 → svc/keycloak
+- Realm : symfony-app
+- Client ID : symfony-app
+- URL Keycloak : http://localhost:8080
+
+ÉTAPE 1 — OIDC Discovery
+=========================
+$ curl http://localhost:8080/realms/symfony-app/.well-known/openid-configuration
+
+Résultat :
+  issuer            : http://localhost:8080/realms/symfony-app ✅
+  token_endpoint    : http://localhost:8080/realms/symfony-app/protocol/openid-connect/token ✅
+  userinfo_endpoint : http://localhost:8080/realms/symfony-app/protocol/openid-connect/userinfo ✅
+  Temps de réponse  : 2.490s (warm-up inclus)
+
+ÉTAPE 2 — Obtention token JWT (Resource Owner Password Flow)
+============================================================
+$ curl -X POST .../protocol/openid-connect/token     -d "client_id=symfony-app&username=testuser&password=password&grant_type=password"
+
+Résultat :
+  token_type : Bearer ✅
+  Temps      : 1.147s
+  access_token (extrait) : eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJKRk5BXzhX...
+
+ÉTAPE 3 — Appel Userinfo avec Bearer token
+==========================================
+$ curl -H "Authorization: Bearer <token>" .../protocol/openid-connect/userinfo
+
+Résultat :
+{"sub":"857cb966-85a2-4203-ac11-840d8bf922e6","email_verified":true,"name":"Test User","preferred_username":"testuser","given_name":"Test","family_name":"User","email":"test@lpmde.fr"}
+  Temps : 0.027s ✅
+
+ÉTAPE 4 — Décodage JWT payload
+================================
+Champs extraits du token :
+  iss                : http://localhost:8080/realms/symfony-app
+  sub                : 857cb966-85a2-4203-ac11-840d8bf922e6
+  preferred_username : testuser
+  email              : test@lpmde.fr
+
+RÉSULTAT GLOBAL
+===============
+✅ SUCCÈS — Expérimentation Keycloak OAuth2/OIDC validée
+- OIDC Discovery endpoint accessible         : ✅
+- Émission token JWT (grant_type=password)  : ✅
+- Token de type Bearer                       : ✅
+- Endpoint userinfo authentifié              : ✅
+- Payload JWT décodé et cohérent             : ✅
+- Issuer = http://localhost:8080/realms/symfony-app (consistant ✅)
+
+LATENCES MESURÉES
+=================
+| Endpoint   | Temps    |
+|------------|----------|
+| Discovery  | 2.490 s  |
+| Token      | 1.147 s  |
+| Userinfo   | 0.027 s  |
+
+Note : latences Discovery/Token élevées = cold start du pod Keycloak
+(3 restarts en 34h, JVM Java se réchauffe progressivement).
+
+TOPOLOGIE K8s UTILISÉE
+======================
+Navigateur/curl
+  └─ http://localhost:8080 (port-forward kubectl)
+       └─ svc/keycloak (lpmde-sandbox)
+            └─ pod keycloak-55945795d5-qk65k

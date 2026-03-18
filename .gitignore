@@ -53,4 +53,6 @@ TACHES.md
 /assets/vendor/
 ###< symfony/asset-mapper ###
 
-/TACHES.md
+###> Tasks / Prompts (local only) ###
+TACHES.md
+###< Tasks / Prompts (local only) ###
