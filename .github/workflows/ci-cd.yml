@@ -206,10 +206,10 @@ jobs:
     if: always()
     steps:
       - name: Download test artifacts
-        run: gh run download ${{ github.run_id }} --name coverage --dir ./ci-artifacts
-        shell: powershell
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage
+          path: ./ci-artifacts
 
       - name: Parse and push metrics to Pushgateway
         shell: powershell
