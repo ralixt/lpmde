@@ -2,6 +2,7 @@
 
 Guide de démarrage quotidien après redémarrage du PC.
 Pour une **première installation**, voir [KIND_SETUP_GUIDE.md](KIND_SETUP_GUIDE.md).
+Pour le déploiement CI/CD et le self-hosted runner, voir [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ---
 
@@ -10,16 +11,20 @@ Pour une **première installation**, voir [KIND_SETUP_GUIDE.md](KIND_SETUP_GUIDE
 ```
 Windows Host
 ├── Docker Desktop
-│   ├── lpmde-web-kind       → Symfony app   :8000
-│   ├── lpmde-prometheus     → Prometheus     :9090
-│   ├── lpmde-grafana        → Grafana        :3000
-│   └── lpmde-rabbitmq-exporter              :9419
+│   ├── lpmde-web-kind       → Symfony app (dev local, :8000)
+│   ├── lpmde-prometheus     → Prometheus :9090
+│   ├── lpmde-grafana        → Grafana :3000
+│   └── lpmde-rabbitmq-exporter :9419
+│
+├── GitHub Self-hosted Runner (actions-runner/)
+│   └── Écoute les jobs GitHub Actions → déploie sur Kind
 │
 └── Kind cluster (kind-lpmde-sandbox)
     └── namespace lpmde-sandbox
-        ├── keycloak   → port-forward :8080
-        ├── rabbitmq   → port-forward :5672 / :15672
-        └── postgres   (interne uniquement)
+        ├── keycloak    → port-forward :8080
+        ├── rabbitmq    → port-forward :5672 / :15672
+        ├── postgres    (interne)
+        └── lpmde-web   → port-forward :8001 (déployé par CI/CD)
 ```
 
 ---
@@ -27,8 +32,6 @@ Windows Host
 ## Démarrage rapide (PC redémarré)
 
 ### Étape 1 — Vérifier Docker Desktop
-
-S'assurer que Docker Desktop est démarré et que le cluster Kind est toujours là :
 
 ```bash
 docker info --format "Docker: {{.ServerVersion}}" 2>/dev/null
@@ -41,7 +44,11 @@ NAME                          STATUS   ROLES           AGE
 lpmde-sandbox-control-plane   Ready    control-plane   Xd
 ```
 
-> Si le cluster n'existe pas : `kind create cluster --name lpmde-sandbox --config k8s/kind/kind-cluster-config.yaml && kubectl apply -k k8s/kind`
+> Si le cluster n'existe pas :
+> ```bash
+> kind create cluster --name lpmde-sandbox --config k8s/kind/kind-cluster-config.yaml
+> kubectl apply -k k8s/kind
+> ```
 
 ---
 
@@ -51,20 +58,26 @@ lpmde-sandbox-control-plane   Ready    control-plane   Xd
 kubectl get pods -n lpmde-sandbox
 ```
 
-Sortie attendue (tous `Running`) :
+Sortie attendue (4 pods `Running`) :
 ```
 NAME                        READY   STATUS    RESTARTS
 keycloak-xxxxx              1/1     Running   X
+lpmde-web-xxxxx             1/1     Running   X
 postgres-xxxxx              1/1     Running   X
 rabbitmq-xxxxx              1/1     Running   X
 ```
 
-> Si un pod est en `CrashLoopBackOff` : `kubectl delete pod -n lpmde-sandbox <nom-du-pod>` (se recrée automatiquement)
+> Si un pod est en `CrashLoopBackOff` :
+> ```bash
+> kubectl delete pod -n lpmde-sandbox <nom-du-pod>
+> ```
+> (il se recrée automatiquement)
 
 ---
 
-### Étape 3 — Démarrer le conteneur Symfony
+### Étape 3 — Démarrer le conteneur Symfony (dev local)
 
+Pour le développement local sans CI/CD :
 ```bash
 docker start lpmde-web-kind
 ```
@@ -79,7 +92,7 @@ curl -s -o /dev/null -w "Symfony HTTP %{http_code}\n" http://localhost:8000/
 
 ### Étape 4 — Lancer les port-forwards Kind
 
-Les port-forwards ne survivent pas au redémarrage du PC — à relancer à chaque fois.
+Les port-forwards ne survivent pas au redémarrage — à relancer à chaque fois.
 
 ```bash
 # Keycloak (OAuth2/OIDC)
@@ -87,34 +100,45 @@ kubectl port-forward -n lpmde-sandbox svc/keycloak 8080:8080 > /tmp/keycloak-pf.
 
 # RabbitMQ (AMQP + Management UI)
 kubectl port-forward -n lpmde-sandbox svc/rabbitmq 5672:5672 15672:15672 > /tmp/rabbitmq-pf.log 2>&1 &
+
+# App Symfony déployée par CI/CD (pod lpmde-web dans Kind)
+kubectl port-forward -n lpmde-sandbox svc/lpmde-web 8001:80 > /tmp/lpmde-web-pf.log 2>&1 &
 ```
 
 Vérification :
 ```bash
 curl -s -o /dev/null -w "Keycloak HTTP %{http_code}\n" http://localhost:8080/realms/symfony-app/.well-known/openid-configuration
 curl -s -o /dev/null -w "RabbitMQ HTTP %{http_code}\n" http://localhost:15672/
-# Attendu : HTTP 200 sur les deux
+curl -s -o /dev/null -w "App K8s HTTP %{http_code}\n" http://localhost:8001/
 ```
 
 ---
 
-### Étape 5 — Démarrer la stack monitoring
+### Étape 5 — Démarrer le self-hosted runner (si démo CI/CD)
+
+Le runner doit tourner pour que les jobs `deploy-staging` et `deploy-production` s'exécutent.
+
+```powershell
+# Windows (PowerShell)
+cd actions-runner
+.\run.cmd
+```
+```bash
+# WSL
+cd ~/actions-runner
+./run.sh
+```
+
+Le terminal doit afficher **`Listening for Jobs`**. Laisser ce terminal ouvert.
+
+> Voir [DEPLOYMENT.md — GitHub Self-Hosted Runner](DEPLOYMENT.md) pour l'installation initiale.
+
+---
+
+### Étape 6 — Démarrer la stack monitoring (optionnel)
 
 ```bash
 docker-compose -f docker-compose.monitoring.yml up -d
-```
-
-Vérification :
-```bash
-docker ps --filter "name=lpmde-" --format "{{.Names}}\t{{.Status}}"
-```
-
-Sortie attendue :
-```
-lpmde-grafana               Up X minutes
-lpmde-prometheus            Up X minutes
-lpmde-rabbitmq-exporter     Up X minutes (healthy)
-lpmde-web-kind              Up X minutes
 ```
 
 ---
@@ -123,7 +147,8 @@ lpmde-web-kind              Up X minutes
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| Application Symfony | http://localhost:8000 | testuser / password (Keycloak) |
+| App Symfony (dev local) | http://localhost:8000 | testuser / password (Keycloak) |
+| App Symfony (pod K8s) | http://localhost:8001 | testuser / password (Keycloak) |
 | Keycloak Admin | http://localhost:8080/admin | admin / admin |
 | RabbitMQ Management | http://localhost:15672 | guest / guest |
 | Prometheus | http://localhost:9090 | — |
@@ -150,6 +175,14 @@ docker exec lpmde-web-kind sh -c "php /var/www/html/bin/console app:dispatch:gho
 docker exec lpmde-web-kind sh -c "php /var/www/html/bin/console messenger:consume async --limit=1 -vv"
 ```
 
+### Déclencher un déploiement CI/CD (demo soutenance)
+```bash
+# Assurer que le runner tourne (étape 5), puis :
+git commit --allow-empty -m "demo: déclencher le pipeline"
+git push origin main
+# → GitHub Actions → build → deploy-production sur le runner local
+```
+
 ---
 
 ## Arrêt propre
@@ -158,24 +191,28 @@ docker exec lpmde-web-kind sh -c "php /var/www/html/bin/console messenger:consum
 # Arrêter les port-forwards
 kill $(pgrep -f "kubectl port-forward") 2>/dev/null
 
-# Arrêter le conteneur Symfony
+# Arrêter les conteneurs Docker dev
 docker stop lpmde-web-kind
 
 # Arrêter la stack monitoring
 docker-compose -f docker-compose.monitoring.yml down
+
+# Arrêter le runner : Ctrl+C dans le terminal du runner
 ```
 
-> Le cluster Kind reste actif (données persistées). Il redémarrera automatiquement avec Docker Desktop au prochain boot.
+> Le cluster Kind reste actif (données persistées) et redémarre automatiquement avec Docker Desktop.
 
 ---
 
 ## Infos importantes
 
 - **Keycloak realm** : `symfony-app` | Client : `symfony-app` | Secret : `7g4hUZzxEbpEegkTA4v1L8w3RICCbe1x`
-- **`.env.local`** : doit être créé dans le conteneur (sans BOM UTF-8) — voir [KEYCLOAK_EXPERIMENTATION.md §3.2](KEYCLOAK_EXPERIMENTATION.md)
-- **`host.docker.internal`** : utilisé par le conteneur Symfony pour accéder aux port-forwards (pas `localhost`)
-- **`php -S`** (serveur built-in) : single-threaded, dev mode — lent par conception. Saturation à ~25 utilisateurs simultanés (voir [SIEGE_RESULTS.md](SIEGE_RESULTS.md))
-- **Données SQLite** : `var/data_dev.db` — persistées dans le volume Docker
+- **Pod lpmde-web** : déployé par CI/CD, utilise SQLite (`var/data.db`) — migrations à lancer manuellement la première fois :
+  ```bash
+  kubectl exec -n lpmde-sandbox deploy/lpmde-web -- php bin/console doctrine:migrations:migrate --no-interaction
+  ```
+- **`host.docker.internal`** : utilisé par le conteneur dev pour accéder aux port-forwards
+- **Données SQLite** : `var/data_dev.db` dans le volume Docker dev, `var/data.db` dans le pod K8s
 
 ---
 

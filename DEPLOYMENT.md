@@ -134,49 +134,77 @@ git push github main
 
 ## ☸️ Déploiement local — Cluster Kind (bac à sable)
 
+### Architecture déployée
+
+```
+Windows Host
+├── Docker Desktop
+│   ├── lpmde-web-kind       → Symfony app (dev, accès direct :8000)
+│   ├── lpmde-prometheus     → Prometheus :9090
+│   ├── lpmde-grafana        → Grafana :3000
+│   └── lpmde-rabbitmq-exporter :9419
+│
+└── Kind cluster (kind-lpmde-sandbox)
+    └── namespace lpmde-sandbox
+        ├── keycloak    → port-forward :8080
+        ├── rabbitmq    → port-forward :5672 / :15672
+        ├── postgres    (interne)
+        └── lpmde-web   → port-forward :8000 (déployé par CI/CD)
+```
+
 ### Prérequis
 - Docker Desktop en cours d'exécution
 - `kubectl` installé
 - `kind` installé
 
-### 1. Créer et déployer le cluster
+### 1. Créer le cluster (première fois uniquement)
 
 ```bash
-# Créer le cluster Kind
 kind create cluster --name lpmde-sandbox --config k8s/kind/kind-cluster-config.yaml
+```
 
-# Déployer tous les services (Postgres, RabbitMQ, Keycloak)
+### 2. Copier et configurer le secret K8s
+
+```bash
+cp k8s/kind/secret.example.yaml k8s/kind/secret.yaml
+# Éditer secret.yaml avec les vraies valeurs si nécessaire
+```
+
+### 3. Déployer tous les services
+
+```bash
 kubectl apply -k k8s/kind
 
 # Attendre que tout soit prêt
 kubectl wait --for=condition=Available deployment/postgres -n lpmde-sandbox --timeout=180s
 kubectl wait --for=condition=Available deployment/rabbitmq -n lpmde-sandbox --timeout=240s
 kubectl wait --for=condition=Available deployment/keycloak -n lpmde-sandbox --timeout=360s
+kubectl wait --for=condition=Available deployment/lpmde-web -n lpmde-sandbox --timeout=180s
 
-# Vérifier
+# Vérifier (4 pods attendus)
 kubectl get pods -n lpmde-sandbox
 ```
 
-### 2. Exposer les services
+### 4. Exposer les services (après chaque redémarrage)
 
 ```bash
 kubectl port-forward -n lpmde-sandbox svc/keycloak 8080:8080 &
 kubectl port-forward -n lpmde-sandbox svc/rabbitmq 5672:5672 15672:15672 &
+kubectl port-forward -n lpmde-sandbox svc/lpmde-web 8000:80 &
 ```
 
-### 3. Initialiser l'application
+### 5. Initialiser la base de données (première fois uniquement)
 
 ```bash
-docker exec -it lpmde-web-kind php bin/console doctrine:migrations:migrate --no-interaction
-docker exec -it lpmde-web-kind php bin/console doctrine:fixtures:load --no-interaction
+kubectl exec -n lpmde-sandbox deploy/lpmde-web -- php bin/console doctrine:migrations:migrate --no-interaction
 ```
 
 ### URLs d'accès
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| Application | http://localhost:8000 | — |
-| Keycloak Admin | http://localhost:8080 | admin / admin |
+| Application (K8s) | http://localhost:8000 | testuser / password |
+| Keycloak Admin | http://localhost:8080/admin | admin / admin |
 | RabbitMQ Management | http://localhost:15672 | guest / guest |
 
 ### Monitoring (optionnel)
@@ -187,14 +215,98 @@ docker-compose -f docker-compose.monitoring.yml up -d
 # Prometheus : http://localhost:9090
 ```
 
-### Note sur le déploiement CI/CD
+---
 
-Le pipeline GitHub Actions **ne peut pas déployer directement sur un cluster Kind local** (le runner GitHub n'a pas accès à votre machine). Le déploiement Kind est donc **manuel** via les commandes ci-dessus.
+## 🤖 GitHub Self-Hosted Runner
 
-En production, les jobs `deploy-staging` et `deploy-production` utiliseraient un accès SSH ou un `kubectl` connecté à un cluster managé (EKS, GKE, AKS). Pour activer le déploiement réel, configurer dans GitHub → Settings → Secrets :
-- `DEPLOY_HOST` : adresse du serveur
-- `DEPLOY_USER` : utilisateur SSH
-- `DEPLOY_KEY` : clé privée SSH
+Le pipeline CI/CD utilise un **runner self-hosted** installé sur le PC local pour déployer réellement sur le cluster Kind. Sans lui, les jobs `deploy-staging` et `deploy-production` resteront en attente.
+
+### Installation (une seule fois)
+
+#### 1. Récupérer le token sur GitHub
+
+Aller sur :
+```
+https://github.com/ralixt/lpmde/settings/actions/runners/new
+```
+Choisir **Windows** ou **Linux (WSL)** et noter le token affiché.
+
+#### 2a. Installation Windows (PowerShell)
+
+```powershell
+mkdir C:\actions-runner && cd C:\actions-runner
+Invoke-WebRequest -Uri https://github.com/actions/runner/releases/download/v2.321.0/actions-runner-win-x64-2.321.0.zip -OutFile actions-runner-win-x64.zip
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[System.IO.Compression.ZipFile]::ExtractToDirectory("$PWD\actions-runner-win-x64.zip", "$PWD")
+.\config.cmd --url https://github.com/ralixt/lpmde --token TOKEN_GITHUB
+```
+
+#### 2b. Installation WSL/Linux (alternative)
+
+```bash
+mkdir ~/actions-runner && cd ~/actions-runner
+curl -o actions-runner-linux-x64.tar.gz -L https://github.com/actions/runner/releases/latest/download/actions-runner-linux-x64-2.321.0.tar.gz
+tar xzf actions-runner-linux-x64.tar.gz
+./config.sh --url https://github.com/ralixt/lpmde --token TOKEN_GITHUB
+```
+
+Lors de la configuration, répondre :
+- Runner group : `[Entrée]` (Default)
+- Runner name : `lpmde-runner` (ou nom de la machine)
+- Labels : `kind,local` (ou `[Entrée]`)
+- Work folder : `[Entrée]` (default `_work`)
+
+#### 3. Vérifier que le runner est connecté
+
+Sur GitHub : **Settings → Actions → Runners** → le runner doit apparaître en **Idle** (vert).
+
+### Démarrer le runner (avant chaque session / soutenance)
+
+```powershell
+# Windows
+cd C:\actions-runner
+.\run.cmd
+```
+```bash
+# WSL
+cd ~/actions-runner
+./run.sh
+```
+
+Le terminal doit afficher `Listening for Jobs`. **Laisser ce terminal ouvert** pendant toute la durée du pipeline.
+
+### Flux de déploiement automatique
+
+Dès qu'un push arrive sur `main` :
+
+```
+push main
+  → build-image-job  : npm build + tests + docker build + push ghcr.io/ralixt/lpmde:latest
+  → deploy-production (self-hosted runner sur ton PC) :
+      1. Vérification du cluster Kind (kubectl get nodes)
+      2. Pull de l'image depuis GHCR
+      3. Chargement dans Kind (kind load docker-image)
+      4. Déploiement (kubectl apply -k k8s/kind/)
+      5. Attente des 4 pods (postgres, rabbitmq, keycloak, lpmde-web)
+      6. Smoke test : vérifie que ≥ 4 pods sont Running
+```
+
+Pour déclencher un déploiement staging (branche `rag` ou `develop`) :
+
+```bash
+git push origin main:rag
+```
+
+### Dépannage runner
+
+```powershell
+# Voir les jobs en cours
+# → Sur GitHub : https://github.com/ralixt/lpmde/actions
+
+# Si le runner ne répond plus, le relancer
+.\run.cmd   # Windows
+./run.sh    # WSL
+```
 
 ---
 
