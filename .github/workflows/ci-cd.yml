@@ -257,60 +257,53 @@ jobs:
 
       - name: Verify Kind cluster
         run: |
-          echo "🔍 Vérification du cluster Kind..."
+          Write-Host "Verification du cluster Kind..."
           kubectl config use-context kind-lpmde-sandbox
           kubectl get nodes
           kubectl get pods -n lpmde-sandbox
-        shell: bash
+        shell: pwsh
 
       - name: Pull latest image from GHCR
         run: |
-          echo "📦 Pull de l'image depuis GHCR..."
-          docker pull ghcr.io/${{ github.repository }}:latest || echo "⚠️ Pull failed, using local image"
-        shell: bash
+          Write-Host "Pull de l'image depuis GHCR..."
+          docker pull ghcr.io/${{ github.repository }}:latest
+          if ($LASTEXITCODE -ne 0) { Write-Host "Pull failed, using local image" }
+        shell: pwsh
 
       - name: Load image into Kind
         run: |
-          echo "📥 Chargement de l'image dans Kind..."
-          kind load docker-image ghcr.io/${{ github.repository }}:latest --name lpmde-sandbox || echo "⚠️ Kind load failed, continuing..."
-        shell: bash
+          Write-Host "Chargement de l'image dans Kind..."
+          kind load docker-image ghcr.io/${{ github.repository }}:latest --name lpmde-sandbox
+          if ($LASTEXITCODE -ne 0) { Write-Host "Kind load failed, continuing..." }
+        shell: pwsh
 
       - name: Deploy to Kind cluster
         run: |
-          echo "🚀 Déploiement sur Kind..."
-
-          # Appliquer les manifestes K8s
+          Write-Host "Deploiement sur Kind..."
           kubectl apply -k k8s/kind/ -n lpmde-sandbox
-
-          # Attendre que les pods soient prêts
-          echo "⏳ Attente des pods..."
-          kubectl wait --for=condition=Available deployment/postgres -n lpmde-sandbox --timeout=120s || true
-          kubectl wait --for=condition=Available deployment/rabbitmq -n lpmde-sandbox --timeout=120s || true
-          kubectl wait --for=condition=Available deployment/keycloak -n lpmde-sandbox --timeout=300s || true
-
-          # Vérifier l'état final
-          echo "✅ État du déploiement :"
+          Write-Host "Attente des pods..."
+          kubectl wait --for=condition=Available deployment/postgres -n lpmde-sandbox --timeout=120s
+          kubectl wait --for=condition=Available deployment/rabbitmq -n lpmde-sandbox --timeout=120s
+          kubectl wait --for=condition=Available deployment/keycloak -n lpmde-sandbox --timeout=300s
+          Write-Host "Etat du deploiement :"
           kubectl get pods -n lpmde-sandbox
           kubectl get svc -n lpmde-sandbox
-        shell: bash
+        shell: pwsh
 
       - name: Run smoke test
         run: |
-          echo "🧪 Smoke test post-déploiement..."
-
-          # Vérifier que les pods sont Running
-          RUNNING=$(kubectl get pods -n lpmde-sandbox --no-headers | grep -c "Running" || echo "0")
-          TOTAL=$(kubectl get pods -n lpmde-sandbox --no-headers | wc -l)
-          echo "Pods Running: $RUNNING / $TOTAL"
-
-          if [ "$RUNNING" -lt "3" ]; then
-            echo "⚠️ Moins de 3 pods Running — vérifier les logs"
+          Write-Host "Smoke test post-deploiement..."
+          $pods = kubectl get pods -n lpmde-sandbox --no-headers
+          $running = ($pods | Select-String "Running").Count
+          $total = $pods.Count
+          Write-Host "Pods Running: $running / $total"
+          if ($running -lt 3) {
+            Write-Host "Moins de 3 pods Running - verifier les logs"
             kubectl get pods -n lpmde-sandbox
             exit 1
-          fi
-
-          echo "✅ Smoke test passé — tous les services sont opérationnels"
-        shell: bash
+          }
+          Write-Host "Smoke test passe - tous les services sont operationnels"
+        shell: pwsh
 
   deploy-production:
     runs-on: self-hosted
@@ -325,9 +318,9 @@ jobs:
 
       - name: Deploy to Kind (production)
         run: |
-          echo "🚀 Déploiement production sur Kind..."
+          Write-Host "Deploiement production sur Kind..."
           kubectl config use-context kind-lpmde-sandbox
           kubectl apply -k k8s/kind/ -n lpmde-sandbox
           kubectl get pods -n lpmde-sandbox
-          echo "✅ Déploiement production terminé"
-        shell: bash
+          Write-Host "Deploiement production termine"
+        shell: pwsh
