@@ -84,12 +84,14 @@
 
                         <div class="flex gap-2 flex-shrink-0">
                             <a href="{{ path('troc_show', {id: annonce.id}) }}"
-                               class="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg transition-colors">
+                               class="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg transition-colors"
+                               data-tooltip="Voir l'annonce">
                                 <span class="material-symbols-outlined text-sm" aria-hidden="true">visibility</span>
                                 Voir
                             </a>
                             <a href="{{ path('troc_edit', {id: annonce.id}) }}"
-                               class="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg transition-colors">
+                               class="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg transition-colors"
+                               data-tooltip="Modifier l'annonce">
                                 <span class="material-symbols-outlined text-sm" aria-hidden="true">edit</span>
                                 Modifier
                             </a>
@@ -97,7 +99,8 @@
                                   onsubmit="return confirm('Supprimer cette annonce ?')">
                                 <button type="submit"
                                         class="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-primary/10 hover:bg-primary border border-primary/20 hover:border-primary text-red-400 hover:text-white rounded-lg transition-colors"
-                                        aria-label="Supprimer l'annonce {{ annonce.title }}">
+                                        aria-label="Supprimer l'annonce {{ annonce.title }}"
+                                        data-tooltip="Supprimer">
                                     <span class="material-symbols-outlined text-sm" aria-hidden="true">delete</span>
                                     Supprimer
                                 </button>

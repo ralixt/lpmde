@@ -44,6 +44,51 @@
                 background: rgba(10, 10, 10, 0.8);
                 backdrop-filter: blur(12px);
             }
+
+            /* ── Tooltip CSS ──────────────────────────────── */
+            [data-tooltip] {
+                position: relative;
+            }
+            [data-tooltip]::after {
+                content: attr(data-tooltip);
+                position: absolute;
+                bottom: calc(100% + 7px);
+                left: 50%;
+                transform: translateX(-50%);
+                background: #1a1313;
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                color: #e2e8f0;
+                font-size: 0.6rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                white-space: nowrap;
+                padding: 4px 8px;
+                border-radius: 4px;
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity 0.15s ease;
+                z-index: 200;
+            }
+            [data-tooltip]::before {
+                content: '';
+                position: absolute;
+                bottom: calc(100% + 2px);
+                left: 50%;
+                transform: translateX(-50%);
+                border: 4px solid transparent;
+                border-top-color: rgba(255, 255, 255, 0.12);
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity 0.15s ease;
+                z-index: 200;
+            }
+            [data-tooltip]:hover::after,
+            [data-tooltip]:focus::after,
+            [data-tooltip]:hover::before,
+            [data-tooltip]:focus::before {
+                opacity: 1;
+            }
         </style>
         <script src="{{ asset('js/app.js') }}"></script>
         {% block stylesheets %}

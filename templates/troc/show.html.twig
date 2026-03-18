@@ -74,7 +74,8 @@
                     {% if app.session.get('user_id') == annonce.owner.id %}
                         <div class="flex gap-3">
                             <a href="{{ path('troc_edit', {id: annonce.id}) }}"
-                               class="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white rounded-lg transition-colors text-xs font-bold uppercase tracking-widest">
+                               class="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white rounded-lg transition-colors text-xs font-bold uppercase tracking-widest"
+                               data-tooltip="Modifier l'annonce">
                                 <span class="material-symbols-outlined text-base" aria-hidden="true">edit</span>
                                 Modifier
                             </a>
@@ -83,7 +84,8 @@
                                 <input type="hidden" name="_method" value="DELETE">
                                 <button type="submit"
                                         class="flex items-center gap-2 px-4 py-2 bg-primary/20 hover:bg-primary border border-primary/30 hover:border-primary text-red-400 hover:text-white rounded-lg transition-colors text-xs font-bold uppercase tracking-widest"
-                                        aria-label="Supprimer l'annonce {{ annonce.title }}">
+                                        aria-label="Supprimer l'annonce {{ annonce.title }}"
+                                        data-tooltip="Supprimer l'annonce">
                                     <span class="material-symbols-outlined text-base" aria-hidden="true">delete</span>
                                     Supprimer
                                 </button>

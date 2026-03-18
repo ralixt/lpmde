@@ -25,7 +25,7 @@
                     class="w-full bg-white/5 border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-primary focus:border-primary"
                     placeholder="Search the crypt..." type="search" />
             </div>
-            <button class="p-2 hover:bg-white/5 rounded-full relative" aria-label="Panier (3 articles)">
+            <button class="p-2 hover:bg-white/5 rounded-full relative" aria-label="Panier (3 articles)" data-tooltip="Panier">
                 <span class="material-symbols-outlined text-white" aria-hidden="true">shopping_cart</span>
                 <span class="absolute top-1 right-1 bg-primary text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold" aria-hidden="true">3</span>
             </button>
@@ -40,6 +40,7 @@
                         aria-haspopup="true"
                         aria-expanded="false"
                         aria-controls="user-menu"
+                        data-tooltip="Mon compte"
                         onclick="this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true')">
                         <span class="material-symbols-outlined text-white" aria-hidden="true">account_circle</span>
                         <span class="text-white text-sm font-semibold hidden md:block">{{ app.session.get('user_name') }}</span>
