@@ -78,7 +78,7 @@
                                         {% elseif annonce.status == 'closed' %}bg-slate-700/60 text-slate-400
                                         {% else %}bg-yellow-900/40 text-yellow-400{% endif %}">
                                         <span class="material-symbols-outlined" style="font-size:11px" aria-hidden="true">{% if annonce.status == 'active' %}check_circle{% elseif annonce.status == 'closed' %}cancel{% else %}pending{% endif %}</span>
-                                        {{ annonce.status }}
+                                        {{ annonce.status }} 
                                     </span> 
                                 </div>
                             </div>
