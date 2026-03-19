@@ -13,3 +13,8 @@ resources:
   - keycloak-service.yaml
   - web-deployment.yaml
   - web-service.yaml
+
+configMapGenerator:
+  - name: keycloak-realm-import
+    files:
+      - keycloak-realm-lpmde.json

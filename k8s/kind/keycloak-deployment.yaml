@@ -23,6 +23,7 @@ spec:
             - --http-enabled=true
             - --hostname=localhost
             - --hostname-strict=false
+            - --import-realm
           ports:
             - containerPort: 8080
               name: http
@@ -64,6 +65,10 @@ spec:
                 secretKeyRef:
                   name: lpmde-sandbox-secrets
                   key: keycloak-db-password
+          volumeMounts:
+            - name: realm-import
+              mountPath: /opt/keycloak/data/import
+              readOnly: true
           resources:
             requests:
               memory: "768Mi"
@@ -95,3 +100,7 @@ spec:
             periodSeconds: 15
             timeoutSeconds: 5
             failureThreshold: 6
+      volumes:
+        - name: realm-import
+          configMap:
+            name: keycloak-realm-import
