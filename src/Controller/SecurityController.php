@@ -64,19 +64,40 @@ class SecurityController extends AbstractController
             // Chercher ou créer l'utilisateur
             $user = $userRepository->findOneByKeycloakId($userInfo['sub']);
 
+            // Si pas trouvé par keycloakId, chercher par email
+            if (!$user && isset($userInfo['email'])) {
+                $user = $userRepository->findOneByEmail($userInfo['email']);
+            }
+
             if (!$user) {
                 $user = new User();
+                $user->setKeycloakId($userInfo['sub']);
+            } else {
                 $user->setKeycloakId($userInfo['sub']);
             }
 
             // Mettre à jour les informations de l'utilisateur
-            $user->setEmail($userInfo['email'] ?? 'no-email@example.com');
-            $user->setUsername($userInfo['preferred_username'] ?? $userInfo['email']);
+            $email = $userInfo['email'] ?? ($userInfo['sub'] . '@keycloak.noemail');
+            $user->setEmail($email);
+            $user->setUsername($userInfo['preferred_username'] ?? $email);
             $user->setFirstName($userInfo['given_name'] ?? '');
             $user->setLastName($userInfo['family_name'] ?? '');
 
-            $entityManager->persist($user);
-            $entityManager->flush();
+            try {
+                $entityManager->persist($user);
+                $entityManager->flush();
+            } catch (\Exception $e) {
+                if (!str_contains($e->getMessage(), 'UNIQUE constraint')) {
+                    throw $e;
+                }
+                // Race condition : l'utilisateur a été créé par une requête concurrente
+                $entityManager->clear();
+                $user = $userRepository->findOneByEmail($email)
+                    ?? $userRepository->findOneByKeycloakId($userInfo['sub']);
+                if (!$user) {
+                    throw $e;
+                }
+            }
 
             // Stocker l'utilisateur en session (authentification manuelle)
             $session->set('user_id', $user->getId());
